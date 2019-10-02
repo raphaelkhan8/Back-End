@@ -3,16 +3,16 @@ const db = require('../db');
 
 const UserTrips = db.define('usertrips', {
   id: {
-    type: Sequelize.INTEGER(11),
+    type: Sequelize.INTEGER,
     autoIncrement: true,
     primaryKey: true,
   },
   userId: {
-    type: Sequelize.INTEGER(11),
+    type: Sequelize.INTEGER,
     allowNull: false,
   },
   tripId: {
-    type: Sequelize.INTEGER(11),
+    type: Sequelize.INTEGER,
     allowNull: true,
   },
 }, {

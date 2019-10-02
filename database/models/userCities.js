@@ -3,16 +3,16 @@ const db = require('../db');
 
 const UserCities = db.define('usercities', {
   id: {
-    type: Sequelize.INTEGER(11),
+    type: Sequelize.INTEGER,
     autoIncrement: true,
     primaryKey: true,
   },
   userId: {
-    type: Sequelize.INTEGER(11),
+    type: Sequelize.INTEGER,
     allowNull: false,
   },
   cityId: {
-    type: Sequelize.INTEGER(11),
+    type: Sequelize.INTEGER,
     allowNull: true,
   },
 }, {
