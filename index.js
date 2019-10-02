@@ -1,6 +1,9 @@
 const express = require('express');
+const { db, models } = require('./database');
 
 const app = express();
+
+app.use(express.json());
 
 // CORS headers
 app.use((req, res, next) => {
@@ -17,6 +20,17 @@ app.use((req, res, next) => {
 
 app.get('/', (req, res) => {
   res.send({ message: 'HELLO WORLD' });
+});
+
+app.post('/users', (req, res) => {
+  console.log('req.bodyyyy', req.body);
+  models.Users.create(req.body)
+    .then((user) => {
+      res.send(user);
+    }).catch((err) => {
+      console.log('Err trying to create the user in the database', err);
+      res.status(400).send(err);
+    });
 });
 
 const PORT = 4201;
