@@ -22,6 +22,12 @@ app.get('/', (req, res) => {
   res.send({ message: 'HELLO WORLD' });
 });
 
+
+//* ****************************
+// USERS
+//* ****************************
+
+// add a user to the users table
 app.post('/users', (req, res) => {
   console.log('req.bodyyyy', req.body);
   models.Users.create(req.body)
@@ -32,6 +38,39 @@ app.post('/users', (req, res) => {
       res.status(400).send(err);
     });
 });
+
+
+//* ****************************
+// TRIPS
+//* ****************************
+
+// add a trip to the database
+app.post('/addTrip', (req, res) => {
+  console.log('req.bodyyyy', req.body);
+  models.Trips.create(req.body)
+    .then((trip) => {
+      res.send(trip);
+    }).catch((err) => {
+      console.log('Err trying to create the trip in the database', err);
+      res.status(400).send(err);
+    });
+});
+
+//* ****************************
+// ROUTES
+//* ****************************
+
+//* ****************************
+// CITIES
+//* ****************************
+
+//* ****************************
+// INTERESTS
+//* ****************************
+
+//* ****************************
+// VISTITED PLACES
+//* ****************************
 
 const PORT = 4201;
 
