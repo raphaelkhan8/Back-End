@@ -3,20 +3,20 @@ const db = require('../db');
 
 const UserVisitedPlaces = db.define('uservisitedplaces', {
   id: {
-    type: Sequelize.INTEGER(11),
+    type: Sequelize.INTEGER,
     autoIncrement: true,
     primaryKey: true,
   },
   weightEffect: {
-    type: Sequelize.INTEGER(11),
+    type: Sequelize.INTEGER,
     allowNull: true,
   },
   userId: {
-    type: Sequelize.INTEGER(11),
+    type: Sequelize.INTEGER,
     allowNull: false,
   },
   visitedPlacesId: {
-    type: Sequelize.INTEGER(11),
+    type: Sequelize.INTEGER,
     allowNull: true,
   },
 }, {

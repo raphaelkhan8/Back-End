@@ -3,20 +3,20 @@ const db = require('../db');
 
 const UserStats = db.define('userstats', {
   id: {
-    type: Sequelize.INTEGER(11),
+    type: Sequelize.INTEGER,
     autoIncrement: true,
     primaryKey: true,
   },
   milesTraveled: {
-    type: Sequelize.INTEGER(11),
+    type: Sequelize.INTEGER,
     allowNull: true,
   },
   visitedCities: {
-    type: Sequelize.INTEGER(11),
+    type: Sequelize.INTEGER,
     allowNull: true,
   },
   topInterests: {
-    type: Sequelize.INTEGER(11),
+    type: Sequelize.INTEGER,
     allowNull: true,
   },
 }, {

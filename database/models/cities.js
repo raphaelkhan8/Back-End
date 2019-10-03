@@ -3,7 +3,7 @@ const db = require('../db');
 
 const Cities = db.define('cities', {
   id: {
-    type: Sequelize.INTEGER(11),
+    type: Sequelize.INTEGER,
     autoIncrement: true,
     primaryKey: true,
   },
