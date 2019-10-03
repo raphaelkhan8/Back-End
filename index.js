@@ -1,9 +1,11 @@
 const express = require('express');
+// const cors = require('cors');
 const { db, models } = require('./database');
 
 const app = express();
 
 app.use(express.json());
+// app.use(cors());
 
 // CORS headers
 app.use((req, res, next) => {
@@ -12,6 +14,7 @@ app.use((req, res, next) => {
   res.header('Access-Contorl-Allow-Methods', 'OPTIONS, GET, POST, PUT, DELETE');
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
+    next();
   } else {
     console.log(`${req.ip} ${req.method} ${req.url}`);
     next();
@@ -44,21 +47,35 @@ app.post('/users', (req, res) => {
 // TRIPS
 //* ****************************
 
-// add a trip to the database
-app.post('/addTrip', (req, res) => {
+// get all trips from the database
+app.get('/getAllTrips', (req, res) => {
   console.log('req.bodyyyy', req.body);
-  models.Trips.create(req.body)
-    .then((trip) => {
-      res.send(trip);
+  models.Trips.findAll()
+    .then((trips) => {
+      const tripsArray = trips;
+      // console.log(tripsArray);
+      res.send(tripsArray);
     }).catch((err) => {
       console.log('Err trying to create the trip in the database', err);
       res.status(400).send(err);
     });
 });
 
-//* ****************************
-// ROUTES
-//* ****************************
+
+// add a trip to the database
+app.post('/addTrip', (req, res) => {
+  console.log('req.bodyyyy', req.body);
+  models.Trips.create(req.body)
+    .then((trip) => {
+      const tripData = trip.dataValues;
+      console.log(tripData);
+      res.send(tripData);
+    }).catch((err) => {
+      console.log('Err trying to create the trip in the database', err);
+      res.status(400).send(err);
+    });
+});
+
 
 //* ****************************
 // CITIES
