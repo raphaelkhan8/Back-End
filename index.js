@@ -14,7 +14,6 @@ app.use((req, res, next) => {
   res.header('Access-Contorl-Allow-Methods', 'OPTIONS, GET, POST, PUT, DELETE');
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
-    next();
   } else {
     console.log(`${req.ip} ${req.method} ${req.url}`);
     next();
