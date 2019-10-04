@@ -90,6 +90,6 @@ app.post('/addTrip', (req, res) => {
 
 const PORT = 4201;
 
-app.listen(PORT, '127.0.0.1', () => {
+app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
