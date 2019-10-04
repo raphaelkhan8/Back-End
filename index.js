@@ -1,6 +1,7 @@
 const express = require('express');
 // const cors = require('cors');
 const { db, models } = require('./database');
+const { getNearbyPlaces } = require('./API-helpers');
 
 const app = express();
 
@@ -88,6 +89,19 @@ app.post('/addTrip', (req, res) => {
 //* ****************************
 // VISTITED PLACES
 //* ****************************
+
+//GET NEARBY PLACES
+
+app.get('/nearbyPlaces', (req, res) => {
+  getNearbyPlaces(req)
+    .then((response) => {
+
+    })
+    .catch((err) => {
+      console.warn(err);
+      res.status(500).send(err);
+    })
+})
 
 const PORT = 4201;
 
