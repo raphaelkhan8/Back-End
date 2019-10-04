@@ -92,10 +92,10 @@ app.post('/addTrip', (req, res) => {
 
 //GET NEARBY PLACES
 
-app.get('/nearbyPlaces', (req, res) => {
+app.get('/nearbyPlaces/:currentPosition', (req, res) => {
   getNearbyPlaces(req)
     .then((response) => {
-
+      
     })
     .catch((err) => {
       console.warn(err);
