@@ -2,7 +2,7 @@ require('dotenv').config();
 
 const express = require('express');
 const { db, models } = require('./database');
-const { getNearbyPlaces } = require('./API-helpers');
+const { getNearbyPlaces, getPositions } = require('./API-helpers');
 
 const app = express();
 
@@ -108,6 +108,14 @@ app.get('/nearbyPlaces', (req, res) => {
     })
 })
 
+app.get('/getRoutePositions', (req, res) => {
+  getPositions(req.query)
+    .then(coords => {
+      console.log(coords)
+      res.status(200).send(coords);
+    })
+    .catch(err => console.error(err))
+})
 const PORT = 4201;
 
 app.listen(PORT, '127.0.0.1', () => {
