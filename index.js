@@ -2,6 +2,8 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth2').Strategy;
 const { db, models } = require('./database');
 const { getNearbyPlaces } = require('./API-helpers');
 
@@ -33,16 +35,29 @@ app.get('/', (req, res) => {
 //* ****************************
 
 // add a user to the users table
-app.post('/users', (req, res) => {
-  console.log('req.bodyyyy', req.body);
-  models.Users.create(req.body)
-    .then((user) => {
-      res.send(user);
-    }).catch((err) => {
-      console.log('Err trying to create the user in the database', err);
-      res.status(400).send(err);
-    });
-});
+// app.post('/users', (req, res) => {
+//   console.log('req.bodyyyy', req.body);
+//   models.Users.create(req.body)
+//     .then((user) => {
+//       res.send(user);
+//     }).catch((err) => {
+//       console.log('Err trying to create the user in the database', err);
+//       res.status(400).send(err);
+//     });
+// });
+
+// passport.use(new GoogleStrategy({
+//   clientID: GOOGLE_CLIENT_ID,
+//   clientSecret: GOOGLE_CLIENT_SECRET,
+//   callbackURL: "http://yourdomain:3000/auth/google/callback",
+//   passReqToCallback: true
+// },
+//   function (request, accessToken, refreshToken, profile, done) {
+//     User.findOrCreate({ googleId: profile.id }, function (err, user) {
+//       return done(err, user);
+//     });
+//   }
+// ));
 
 
 //* ****************************
