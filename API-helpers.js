@@ -5,9 +5,12 @@ const googleMapsClient = require('@google/maps').createClient({
     Promise: Promise
   });
 
-const getNearbyPlaces = (req) => {
-    req.body;
-    return googleMapsClient.places().asPromise;
+const getNearbyPlaces = (location) => {
+    const options = {
+      location,
+      radius: 1,
+    }
+    return googleMapsClient.places(options).asPromise();
 }
 
 module.exports.getNearbyPlaces = getNearbyPlaces;
