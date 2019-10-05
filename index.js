@@ -1,11 +1,13 @@
 require('dotenv').config();
 
 const express = require('express');
+const cors = require('cors');
 const { db, models } = require('./database');
 
 const app = express();
 
 app.use(express.json());
+app.use(cors());
 
 // CORS headers
 app.use((req, res, next) => {
@@ -90,6 +92,6 @@ app.post('/addTrip', (req, res) => {
 
 const PORT = 4201;
 
-app.listen(PORT, '127.0.0.1', () => {
+app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
