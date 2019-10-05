@@ -7,8 +7,13 @@ const googleMapsClient = require('@google/maps').createClient({
 
 const getNearbyPlaces = (location) => {
     const options = {
+      query: 'new orleans bar',
       location,
       radius: 1,
+      type: "bar"
+    }
+    const test = {
+      placeid: 'EisxMyBNYXJrZXQgU3RyZWV0LCBXaWxtaW5ndG9uLCBOQyAyODQwMSwgVVNB'
     }
     return googleMapsClient.places(options).asPromise();
 }

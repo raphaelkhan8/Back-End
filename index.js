@@ -94,7 +94,13 @@ app.post('/addTrip', (req, res) => {
 app.get('/nearbyPlaces', (req, res) => {
   getNearbyPlaces(req.query.location)
     .then((response) => {
-      res.status(200).send(response)
+      const locations = response.json.results.map(place => {
+        return {
+          lat: place.geometry.location.lat,
+          lng: place.geometry.location.lng
+        }
+      })
+      res.status(200).send(locations);
     })
     .catch((err) => {
       console.warn(err);
