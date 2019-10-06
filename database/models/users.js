@@ -7,8 +7,8 @@ const Users = db.define('users', {
     autoIncrement: true,
     primaryKey: true,
   },
-  statsId: {
-    type: Sequelize.INTEGER,
+  googleId: {
+    type: Sequelize.STRING,
     allowNull: true,
   },
   username: {
