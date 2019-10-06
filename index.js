@@ -5,7 +5,7 @@ const cors = require('cors');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth2').Strategy;
 const { db, models } = require('./database');
-const { getNearbyPlaces } = require('./API-helpers');
+const { getNearbyPlaces, getPositions } = require('./API-helpers');
 
 const app = express();
 
@@ -123,6 +123,14 @@ app.get('/nearbyPlaces', (req, res) => {
     });
 });
 
+app.get('/getRoutePositions', (req, res) => {
+  getPositions(req.query)
+    .then(coords => {
+      console.log(coords)
+      res.status(200).send(coords);
+    })
+    .catch(err => console.error(err))
+})
 const PORT = 4201;
 
 app.listen(PORT, () => {
