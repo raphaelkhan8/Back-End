@@ -9,10 +9,11 @@ const decode = (encodedObj) => {
 }
 const getNearbyPlaces = (location) => {
     const options = {
-      query: 'new orleans bar',
+      query: 'near me',
       location,
-      radius: 1,
-      type: "bar"
+      radius: 100,
+      type: "bar",
+      opennow: true
     }
     const test = {
       placeid: 'EisxMyBNYXJrZXQgU3RyZWV0LCBXaWxtaW5ndG9uLCBOQyAyODQwMSwgVVNB'
