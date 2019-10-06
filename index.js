@@ -106,24 +106,22 @@ app.post('/addTrip', (req, res) => {
 // VISTITED PLACES
 //* ****************************
 
-//GET NEARBY PLACES
+// GET NEARBY PLACES
 
 app.get('/nearbyPlaces', (req, res) => {
   getNearbyPlaces(req.query.location)
     .then((response) => {
-      const locations = response.json.results.map(place => {
-        return {
-          lat: place.geometry.location.lat,
-          lng: place.geometry.location.lng
-        }
-      })
+      const locations = response.json.results.map(place => ({
+        lat: place.geometry.location.lat,
+        lng: place.geometry.location.lng,
+      }));
       res.status(200).send(locations);
     })
     .catch((err) => {
       console.warn(err);
       res.status(500).send(err);
-    })
-})
+    });
+});
 
 const PORT = 4201;
 
