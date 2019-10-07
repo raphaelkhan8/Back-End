@@ -12,17 +12,36 @@ const app = express();
 
 app.use(express.json());
 app.use(cors());
-// app.use(cookieParser());
-// app.use(bodyParser());
-// app.use(session({
-//   secret: 'secretToBeChanged',
-//   saveUninitialized: false,
-//   resave: false,
-// }));
 app.use(passport.initialize());
 app.use(passport.session());
 
 const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CLIENT_CALLBACK_URL } = process.env;
+
+passport.use(new GoogleStrategy({
+  clientID: GOOGLE_CLIENT_ID,
+  clientSecret: GOOGLE_CLIENT_SECRET,
+  callbackURL: GOOGLE_CLIENT_CALLBACK_URL,
+},
+((accessToken, refreshToken, profile, cb) => {
+  console.log('!!!!!THISISPROFILE!!!!', profile);
+  models.Users.findOrCreate({
+    where: { googleId: profile.id },
+    defaults: { username: profile.displayName },
+  })
+    .then(([user]) => {
+      cb(null, user);
+    })
+    .catch(error => console.log(error));
+})));
+
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+passport.deserializeUser((id, done) => {
+  models.Users.findById(id, (err, user) => {
+    done(err, user);
+  });
+});
 
 // CORS headers
 app.use((req, res, next) => {
@@ -37,41 +56,15 @@ app.use((req, res, next) => {
   }
 });
 
-passport.use(new GoogleStrategy({
-  clientID: GOOGLE_CLIENT_ID,
-  clientSecret: GOOGLE_CLIENT_SECRET,
-  callbackURL: GOOGLE_CLIENT_CALLBACK_URL,
-},
-((accessToken, refreshToken, profile, cb) => {
-  console.log('!!!!!THISISPROFILE!!!!', profile);
-  models.Users.findOrCreate({
-    where: { googleId: profile.id },
-    defaults: { username: profile.displayName },
-  })
-    .then((err, user) => cb(err, user))
-    .catch(error => console.log(error));
-})));
-
-passport.serializeUser((user, done) => {
-  done(null, user.id);
-});
-passport.deserializeUser((id, done) => {
-  models.Users.findById(id, (err, user) => {
-    done(err, user);
-  });
-});
 
 app.get('/auth/google',
   passport.authenticate('google', { scope: ['profile'] }));
 
 app.get('/auth/google/callback',
-  passport.authenticate('google', {
-    failureRedirect: 'http://localhost:4200/',
-    successRedirect: 'http://localhost:4201/',
-  }));
-// (req, res) => {
-//   res.redirect('http://localhost:4200/explore');
-// });
+  passport.authenticate('google', { failureRedirect: 'http://localhost:4200/' }),
+  (req, res) => {
+    res.redirect('http://localhost:4200/explore');
+  });
 
 // app.get('/', (req, res) => {
 //   res.send({ message: 'HELLO WORLD' });
