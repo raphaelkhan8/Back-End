@@ -52,23 +52,26 @@ passport.use(new GoogleStrategy({
     .catch(error => console.log(error));
 })));
 
-// passport.serializeUser((user, done) => {
-//   done(null, user.id);
-// });
-// passport.deserializeUser((id, done) => {
-//   models.Users.findById(id, (err, user) => {
-//     done(err, user);
-//   });
-// });
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+passport.deserializeUser((id, done) => {
+  models.Users.findById(id, (err, user) => {
+    done(err, user);
+  });
+});
 
 app.get('/auth/google',
   passport.authenticate('google', { scope: ['profile'] }));
 
 app.get('/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: 'http:localhost:4200/' }),
-  (req, res) => {
-    res.redirect('http:localhost:4200/explore');
-  });
+  passport.authenticate('google', {
+    failureRedirect: 'http://localhost:4200/',
+    successRedirect: 'http://localhost:4201/',
+  }));
+// (req, res) => {
+//   res.redirect('http://localhost:4200/explore');
+// });
 
 // app.get('/', (req, res) => {
 //   res.send({ message: 'HELLO WORLD' });
