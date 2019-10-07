@@ -3,14 +3,26 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth2').Strategy;
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { db, models } = require('./database');
 const { getNearbyPlaces, getPositions } = require('./API-helpers');
+
 
 const app = express();
 
 app.use(express.json());
 app.use(cors());
+// app.use(cookieParser());
+// app.use(bodyParser());
+// app.use(session({
+//   secret: 'secretToBeChanged',
+//   saveUninitialized: false,
+//   resave: false,
+// }));
+app.use(passport.initialize());
+app.use(passport.session());
+
+const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CLIENT_CALLBACK_URL } = process.env;
 
 // CORS headers
 app.use((req, res, next) => {
@@ -25,9 +37,42 @@ app.use((req, res, next) => {
   }
 });
 
-app.get('/', (req, res) => {
-  res.send({ message: 'HELLO WORLD' });
-});
+passport.use(new GoogleStrategy({
+  clientID: GOOGLE_CLIENT_ID,
+  clientSecret: GOOGLE_CLIENT_SECRET,
+  callbackURL: GOOGLE_CLIENT_CALLBACK_URL,
+},
+((accessToken, refreshToken, profile, cb) => {
+  console.log('!!!!!THISISPROFILE!!!!', profile);
+  models.Users.findOrCreate({
+    where: { googleId: profile.id },
+    defaults: { username: profile.displayName },
+  })
+    .then((err, user) => cb(err, user))
+    .catch(error => console.log(error));
+})));
+
+// passport.serializeUser((user, done) => {
+//   done(null, user.id);
+// });
+// passport.deserializeUser((id, done) => {
+//   models.Users.findById(id, (err, user) => {
+//     done(err, user);
+//   });
+// });
+
+app.get('/auth/google',
+  passport.authenticate('google', { scope: ['profile'] }));
+
+app.get('/auth/google/callback',
+  passport.authenticate('google', { failureRedirect: 'http:localhost:4200/' }),
+  (req, res) => {
+    res.redirect('http:localhost:4200/explore');
+  });
+
+// app.get('/', (req, res) => {
+//   res.send({ message: 'HELLO WORLD' });
+// });
 
 
 //* ****************************
@@ -45,19 +90,6 @@ app.get('/', (req, res) => {
 //       res.status(400).send(err);
 //     });
 // });
-
-// passport.use(new GoogleStrategy({
-//   clientID: GOOGLE_CLIENT_ID,
-//   clientSecret: GOOGLE_CLIENT_SECRET,
-//   callbackURL: "http://yourdomain:3000/auth/google/callback",
-//   passReqToCallback: true
-// },
-//   function (request, accessToken, refreshToken, profile, done) {
-//     User.findOrCreate({ googleId: profile.id }, function (err, user) {
-//       return done(err, user);
-//     });
-//   }
-// ));
 
 
 //* ****************************
@@ -106,33 +138,31 @@ app.post('/addTrip', (req, res) => {
 // VISTITED PLACES
 //* ****************************
 
-//GET NEARBY PLACES
+// GET NEARBY PLACES
 
 app.get('/nearbyPlaces', (req, res) => {
   getNearbyPlaces(req.query.location)
     .then((response) => {
-      const locations = response.json.results.map(place => {
-        return {
-          lat: place.geometry.location.lat,
-          lng: place.geometry.location.lng
-        }
-      })
+      const locations = response.json.results.map(place => ({
+        lat: place.geometry.location.lat,
+        lng: place.geometry.location.lng,
+      }));
       res.status(200).send(locations);
     })
     .catch((err) => {
       console.warn(err);
       res.status(500).send(err);
-    })
-})
+    });
+});
 
 app.get('/getRoutePositions', (req, res) => {
   getPositions(req.query)
-    .then(coords => {
-      console.log(coords)
+    .then((coords) => {
+      console.log(coords);
       res.status(200).send(coords);
     })
-    .catch(err => console.error(err))
-})
+    .catch(err => console.error(err));
+});
 const PORT = 4201;
 
 app.listen(PORT, () => {
