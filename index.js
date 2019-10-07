@@ -147,7 +147,7 @@ app.get('/placePhoto', (req, res) => {
   getPlacePhoto(req.query)
     .then(photo => {
       console.log(photo)
-      res.status(200).set('Content-Type', 'image/gif').write(photo.readableBuffer.head.data)})
+      res.status(200).write(photo.readableBuffer.head.data)})
     .catch(err => console.error(err))
 })
 app.listen(PORT, () => {
