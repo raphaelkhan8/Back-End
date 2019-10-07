@@ -5,7 +5,7 @@ const cors = require('cors');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth2').Strategy;
 const { db, models } = require('./database');
-const { getNearbyPlaces, getPositions } = require('./API-helpers');
+const { getNearbyPlaces } = require('./API-helpers');
 
 const app = express();
 
@@ -106,31 +106,25 @@ app.post('/addTrip', (req, res) => {
 // VISTITED PLACES
 //* ****************************
 
-// GET NEARBY PLACES
+//GET NEARBY PLACES
 
 app.get('/nearbyPlaces', (req, res) => {
   getNearbyPlaces(req.query.location)
     .then((response) => {
-      const locations = response.json.results.map(place => ({
-        lat: place.geometry.location.lat,
-        lng: place.geometry.location.lng,
-      }));
+      const locations = response.json.results.map(place => {
+        return {
+          lat: place.geometry.location.lat,
+          lng: place.geometry.location.lng
+        }
+      })
       res.status(200).send(locations);
     })
     .catch((err) => {
       console.warn(err);
       res.status(500).send(err);
-    });
-});
-
-app.get('/getRoutePositions', (req, res) => {
-  getPositions(req.query)
-    .then(coords => {
-      console.log(coords)
-      res.status(200).send(coords);
     })
-    .catch(err => console.error(err))
 })
+
 const PORT = 4201;
 
 app.listen(PORT, () => {
