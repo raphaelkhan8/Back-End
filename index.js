@@ -28,11 +28,9 @@ passport.use(new GoogleStrategy({
     defaults: { username: profile.displayName },
   })
     .then(([user]) => {
-      console.log(user);
-      console.log('dsfloskldkgslkjldslkjkdjkfgkfjdklgdklgjkhdfg');
       cb(null, user);
     })
-    .catch(error => cb(null, error));
+    .catch(error => console.log(error));
 })));
 
 passport.serializeUser((user, done) => {
@@ -57,10 +55,6 @@ app.use((req, res, next) => {
   }
 });
 
-app.get('/', (req, res) => {
-  res.send({ message: 'HELLO WORLD' });
-});
-
 
 //* ****************************
 // AUTH
@@ -74,23 +68,6 @@ app.get('/auth/google/callback',
   (req, res) => {
     res.redirect('http://localhost:4200/explore');
   });
-
-
-//* ****************************
-// USERS
-//* ****************************
-
-// add a user to the users table
-// app.post('/users', (req, res) => {
-//   console.log('req.bodyyyy', req.body);
-//   models.Users.create(req.body)
-//     .then((user) => {
-//       res.send(user);
-//     }).catch((err) => {
-//       console.log('Err trying to create the user in the database', err);
-//       res.status(400).send(err);
-//     });
-// });
 
 
 //* ****************************
@@ -131,9 +108,11 @@ app.post('/addTrip', (req, res) => {
 // CITIES
 //* ****************************
 
+
 //* ****************************
 // INTERESTS
 //* ****************************
+
 
 //* ****************************
 // VISTITED PLACES
@@ -144,6 +123,7 @@ app.post('/addTrip', (req, res) => {
 app.get('/nearbyPlaces', (req, res) => {
   getNearbyPlaces(req.query.location)
     .then((response) => {
+      console.log('locaations', response.json.results);
       const locations = response.json.results.map(place => ({
         lat: place.geometry.location.lat,
         lng: place.geometry.location.lng,
