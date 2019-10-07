@@ -6,6 +6,7 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth2').Strategy;
 const { db, models } = require('./database');
 const { getNearbyPlaces, getPositions, getPlacePhoto } = require('./API-helpers');
+const util = require('util');
 
 const app = express();
 
@@ -145,8 +146,9 @@ app.get('/routePositions', (req, res) => {
 app.get('/placePhoto', (req, res) => {
   getPlacePhoto(req.query)
   .then(photo => {
-    console.log(photo)
-    res.status(200).write(photo.readableBuffer.head.data)})
+    res.set({'Content-Type': 'image/jpg'})
+    res.status(200).send(photo);
+  })
     .catch(err => console.error(err))
   })
 
