@@ -8,17 +8,19 @@ const decode = (encodedObj) => {
 
 }
 const getNearbyPlaces = (location) => {
+  //lat: 29.96768435314543,
+  // lng: -90.05025405587452
+    
     const options = {
-      query: 'near me',
-      location,
-      radius: 100,
-      type: "bar",
-      opennow: true
+      location: `29.96768435314543,-90.05025405587452`,
+      keyword: 'bar',
+      opennow: true,
+      rankby: 'distance'
     }
     const test = {
       placeid: 'EisxMyBNYXJrZXQgU3RyZWV0LCBXaWxtaW5ndG9uLCBOQyAyODQwMSwgVVNB'
     }
-    return googleMapsClient.places(options).asPromise();
+    return googleMapsClient.placesNearby(options).asPromise();
 }
 
 const getPositions = (addresses) => {
@@ -48,5 +50,14 @@ const getPositions = (addresses) => {
           })
 }
 
+const getPlacePhoto = (photoRef) => {
+  const options = {
+    photoreference: photoRef.ref,
+    maxwidth: 150,
+  }
+  return googleMapsClient.placesPhoto(options).asPromise();
+}
+
 module.exports.getPositions = getPositions;
 module.exports.getNearbyPlaces = getNearbyPlaces;
+module.exports.getPlacePhoto = getPlacePhoto;

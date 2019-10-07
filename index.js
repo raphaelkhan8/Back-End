@@ -5,7 +5,7 @@ const cors = require('cors');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth2').Strategy;
 const { db, models } = require('./database');
-const { getNearbyPlaces, getPositions } = require('./API-helpers');
+const { getNearbyPlaces, getPositions, getPlacePhoto } = require('./API-helpers');
 
 const app = express();
 
@@ -111,10 +111,18 @@ app.post('/addTrip', (req, res) => {
 app.get('/nearbyPlaces', (req, res) => {
   getNearbyPlaces(req.query.location)
     .then((response) => {
+      console.log(response)
       const locations = response.json.results.map(place => {
         return {
+          name: place.name,
+          placeId: place.place_id,
           lat: place.geometry.location.lat,
-          lng: place.geometry.location.lng
+          lng: place.geometry.location.lng,
+          photos: place.photos[0].photo_reference,
+          address: place.vicinity,
+          icon: place.icon,
+          priceLevel: place.price_level,
+          rating: place.rating
         }
       })
       res.status(200).send(locations);
@@ -125,7 +133,7 @@ app.get('/nearbyPlaces', (req, res) => {
     })
 })
 
-app.get('/getRoutePositions', (req, res) => {
+app.get('/routePositions', (req, res) => {
   getPositions(req.query)
     .then(coords => {
       console.log(coords)
@@ -135,6 +143,13 @@ app.get('/getRoutePositions', (req, res) => {
 })
 const PORT = 4201;
 
+app.get('/placePhoto', (req, res) => {
+  getPlacePhoto(req.query)
+    .then(photo => {
+      console.log(photo)
+      res.status(200).set('Content-Type', 'image/gif').write(photo.readableBuffer.head.data)})
+    .catch(err => console.error(err))
+})
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
