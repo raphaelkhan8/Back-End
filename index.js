@@ -111,7 +111,7 @@ app.post('/addTrip', (req, res) => {
 app.get('/nearbyPlaces', (req, res) => {
   getNearbyPlaces(req.query.location)
     .then((response) => {
-      console.log(response)
+      // console.log(response)
       const locations = response.json.results.map(place => {
         return {
           name: place.name,
@@ -125,7 +125,7 @@ app.get('/nearbyPlaces', (req, res) => {
           rating: place.rating
         }
       })
-      res.status(200).send(locations);
+      res.status(200).send(locations.slice(0, 5));
     })
     .catch((err) => {
       console.warn(err);
@@ -136,20 +136,26 @@ app.get('/nearbyPlaces', (req, res) => {
 app.get('/routePositions', (req, res) => {
   getPositions(req.query)
     .then(coords => {
-      console.log(coords)
+      // console.log(coords)
       res.status(200).send(coords);
     })
     .catch(err => console.error(err))
 })
-const PORT = 4201;
 
 app.get('/placePhoto', (req, res) => {
   getPlacePhoto(req.query)
-    .then(photo => {
-      console.log(photo)
-      res.status(200).write(photo.readableBuffer.head.data)})
+  .then(photo => {
+    console.log(photo)
+    res.status(200).write(photo.readableBuffer.head.data)})
     .catch(err => console.error(err))
-})
-app.listen(PORT, () => {
+  })
+
+
+
+
+
+
+  const PORT = 4201;
+  app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });

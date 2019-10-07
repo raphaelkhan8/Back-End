@@ -12,8 +12,9 @@ const getNearbyPlaces = (location) => {
   // lng: -90.05025405587452
     
     const options = {
-      location: `29.96768435314543,-90.05025405587452`,
-      keyword: 'bar',
+      // location: `29.96768435314543,-90.05025405587452`,
+      location,
+      keyword: 'coffee',
       opennow: true,
       rankby: 'distance'
     }
@@ -58,6 +59,20 @@ const getPlacePhoto = (photoRef) => {
   return googleMapsClient.placesPhoto(options).asPromise();
 }
 
+const throttle = function(callback, limit) {
+  var wait = false;                  // Initially, we're not waiting
+  return function (arg) {               // We return a throttled function
+      if (!wait) {                   // If we're not waiting
+          callback.call(null, arg);           // Execute users function
+          wait = true;               // Prevent future invocations
+          setTimeout(function () {   // After a period of time
+              wait = false;          // And allow future invocations
+          }, limit);
+      }
+  }
+}
+
+module.exports.throttle = throttle;
 module.exports.getPositions = getPositions;
 module.exports.getNearbyPlaces = getNearbyPlaces;
 module.exports.getPlacePhoto = getPlacePhoto;
