@@ -3,6 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const passport = require('passport');
+const session = require('express-session');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { models } = require('./database');
 const { getNearbyPlaces, getPositions } = require('./API-helpers');
@@ -11,10 +12,18 @@ const app = express();
 
 app.use(express.json());
 app.use(cors());
+app.use(session({
+  secret: 'keyboard cat',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: true },
+}));
 app.use(passport.initialize());
 app.use(passport.session());
 
-const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CLIENT_CALLBACK_URL } = process.env;
+const {
+  GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CLIENT_CALLBACK_URL, FRONTEND_BASE_URL,
+} = process.env;
 
 passport.use(new GoogleStrategy({
   clientID: GOOGLE_CLIENT_ID,
@@ -30,7 +39,7 @@ passport.use(new GoogleStrategy({
     .then(([user]) => {
       cb(null, user);
     })
-    .catch(error => console.log(error));
+    .catch(error => cb(null, error));
 })));
 
 passport.serializeUser((user, done) => {
@@ -64,9 +73,11 @@ app.get('/auth/google',
   passport.authenticate('google', { scope: ['profile'] }));
 
 app.get('/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: 'http://localhost:4200/' }),
+  passport.authenticate('google', { failureRedirect: `${FRONTEND_BASE_URL}` }),
   (req, res) => {
-    res.redirect('http://localhost:4200/explore');
+    // Successful authentication, redirect to explore page.
+    console.log('REQ.USER!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', req.user);
+    res.redirect(`${FRONTEND_BASE_URL}/explore?username=${req.user.username}`);
   });
 
 
