@@ -1,7 +1,6 @@
 require('dotenv').config();
 
 const express = require('express');
-const bodyParser = require('body-parser');
 const cors = require('cors');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
@@ -11,8 +10,7 @@ const { getNearbyPlaces, getPositions } = require('./API-helpers');
 const app = express();
 
 app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: false }));
 app.use(cors());
 app.use(passport.initialize());
 app.use(passport.session());
@@ -108,21 +106,15 @@ app.post('/addTrip', (req, res) => {
 app.post('/removeTrip', (req, res) => {
   console.log('REQBODDY', req.body);
   console.log('REQBODDY', req.body.id);
-  return models.UserTrips.destroy({
+  models.UserTrips.destroy({
     where: {
       tripId: req.body.id,
     },
-  }).then((trip) => {
-    console.log('@@@TRIP@@@' + trip)
+  }).then(() => {
     models.Trips.destroy({
       where: {
-        id: trip[0].id,
+        route: req.body.route,
       },
-      // defaults: {
-      //   recipe_name: recipeName,
-      //   recipe_image: imageUrl,
-      //   recipe_url: recipeUrl,
-      // },
     })
       .then(() => {
         res.send(201);
