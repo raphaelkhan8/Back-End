@@ -19,6 +19,10 @@ const Trips = db.define('trips', {
     type: Sequelize.STRING,
     allowNull: true,
   },
+  wayPoints: {
+    type: Sequelize.STRING,
+    allowNull: true,
+  },
   milesTraveled: {
     type: Sequelize.INTEGER,
     allowNull: true,
