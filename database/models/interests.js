@@ -13,7 +13,7 @@ const Interests = db.define('interests', {
   },
 }, {
   freezeTableName: true,
-  timeStamps: true,
+  timeStamps: false,
 });
 
 module.exports.Interests = Interests;
