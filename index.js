@@ -152,17 +152,23 @@ app.get('/getAllUsersTrips', (req, res) => {
 //* ****************************
 
 //* ****************************
+// SHARING
+//* ****************************
+
+
+//* ****************************
 // STATS
 //* ****************************
 
-app.get('/getStats', (req, res) => {
+// app.get('/getStats', (req, res) => {
 
-});
+// });
 
 //* ****************************
 // INTERESTS
 //* ****************************
 
+// likes an interest
 app.post('/likedInterest', (req, res) => {
   const field = req.body.interest;
   models.UserInterests.findOne({
@@ -176,7 +182,7 @@ app.post('/likedInterest', (req, res) => {
       console.error(err);
     });
 });
-
+// dislikes an interest
 app.post('/dislikedInterest', (req, res) => {
   const field = req.body.interest;
   models.UserInterests.findOne({
@@ -190,7 +196,19 @@ app.post('/dislikedInterest', (req, res) => {
       console.error(err);
     });
 });
-
+// deletes interest
+app.post('/deleteInterest', (req, res) => {
+  console.log('REQBUTTY', req.body);
+  models.UserInterests.findOne({
+    where: { userId: req.body.id },
+  })
+    .then((interest) => {
+      console.log(interest);
+      models.UserInterests.update({
+        where: { interest: null },
+      });
+    });
+});
 // get user's top five interests
 app.get('/getTopFiveInterests', (req, res) => {
   models.Users.findAll({ where: { id: req.query.id } })
