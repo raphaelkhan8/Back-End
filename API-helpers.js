@@ -56,7 +56,7 @@ const getPlacePhoto = (photoRef) => {
   const options = {
     key: GOOGLE_MAPS_API_KEY,
     photoreference: photoRef.ref,
-    maxwidth: 200,
+    maxwidth: 100,
   }
 
     return axios.get('https://maps.googleapis.com/maps/api/place/photo', { responseType: 'arraybuffer', params: options })
@@ -64,20 +64,29 @@ const getPlacePhoto = (photoRef) => {
   // return googleMapsClient.placesPhoto(options).asPromise();
 }
 
-const throttle = function(callback, limit) {
-  var wait = false;                  // Initially, we're not waiting
-  return function (arg) {               // We return a throttled function
-      if (!wait) {                   // If we're not waiting
-          callback.call(null, arg);           // Execute users function
-          wait = true;               // Prevent future invocations
-          setTimeout(function () {   // After a period of time
-              wait = false;          // And allow future invocations
-          }, limit);
-      }
+const getAutocompleteAddress = (query) => {
+  const options = {
+    input: query.input,
+    location: query.location,
+    radius: 100000
   }
+  return googleMapsClient.placesQueryAutoComplete(options).asPromise();
 }
 
-module.exports.throttle = throttle;
+module.exports.getAutocompleteAddress = getAutocompleteAddress;
 module.exports.getPositions = getPositions;
 module.exports.getNearbyPlaces = getNearbyPlaces;
 module.exports.getPlacePhoto = getPlacePhoto;
+
+// const throttle = function(callback, limit) {
+//   var wait = false;                  // Initially, we're not waiting
+//   return function (arg) {               // We return a throttled function
+//       if (!wait) {                   // If we're not waiting
+//           callback.call(null, arg);           // Execute users function
+//           wait = true;               // Prevent future invocations
+//           setTimeout(function () {   // After a period of time
+//               wait = false;          // And allow future invocations
+//           }, limit);
+//       }
+//   }
+// }

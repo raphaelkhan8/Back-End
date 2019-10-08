@@ -5,7 +5,12 @@ const cors = require('cors');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { db, models } = require('./database');
-const { getNearbyPlaces, getPositions, getPlacePhoto } = require('./API-helpers');
+const { 
+  getNearbyPlaces, 
+  getPositions, 
+  getPlacePhoto,
+  getAutocompleteAddress
+ } = require('./API-helpers');
 const util = require('util');
 
 
@@ -180,13 +185,20 @@ app.get('/placePhoto', (req, res) => {
   .then(photo => {
     console.log(photo)
     res.set('Content-Type', photo.headers['content-type'])
-    res.status(200).send(Buffer.from(photo.data, 'base64').toString());
+    res.status(200).send(Buffer.from(photo.data, 'base64'));
   })
     .catch(err => console.error(err))
   })
 
 
-
+  app.get('/autocompleteAddress', (req, res) => {
+    getAutocompleteAddress(req.query)
+    .then(suggestion => {
+      console.log(suggestion)
+    })
+    .catch(err => console.error(err))
+  })
+  
 
 
 
