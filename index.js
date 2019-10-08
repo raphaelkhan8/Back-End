@@ -56,6 +56,9 @@ app.use((req, res, next) => {
   }
 });
 
+//* ****************************
+// AUTH
+//* ****************************
 
 app.get('/auth/google',
   passport.authenticate('google', { scope: ['profile'] }));
@@ -66,45 +69,23 @@ app.get('/auth/google/callback',
     res.redirect('http://localhost:4200/explore');
   });
 
-// app.get('/', (req, res) => {
-//   res.send({ message: 'HELLO WORLD' });
-// });
-
-
-//* ****************************
-// USERS
-//* ****************************
-
-// add a user to the users table
-// app.post('/users', (req, res) => {
-//   console.log('req.bodyyyy', req.body);
-//   models.Users.create(req.body)
-//     .then((user) => {
-//       res.send(user);
-//     }).catch((err) => {
-//       console.log('Err trying to create the user in the database', err);
-//       res.status(400).send(err);
-//     });
-// });
-
-
 //* ****************************
 // TRIPS
 //* ****************************
 
-// get all trips from the database
-app.get('/getAllTrips', (req, res) => {
-  console.log('req.bodyyyy', req.body);
-  models.Trips.findAll()
-    .then((trips) => {
-      const tripsArray = trips;
-      // console.log(tripsArray);
-      res.send(tripsArray);
-    }).catch((err) => {
-      console.log('Err trying to create the trip in the database', err);
-      res.status(400).send(err);
-    });
-});
+// // get all trips from the database
+// app.get('/getAllTrips', (req, res) => {
+//   console.log('req.bodyyyy', req.body);
+//   models.Trips.findAll()
+//     .then((trips) => {
+//       const tripsArray = trips;
+//       // console.log(tripsArray);
+//       res.send(tripsArray);
+//     }).catch((err) => {
+//       console.log('Err trying to create the trip in the database', err);
+//       res.status(400).send(err);
+//     });
+// });
 
 
 // add a trip to the database
@@ -121,6 +102,28 @@ app.post('/addTrip', (req, res) => {
     });
 });
 
+// gets all users past, current, and previous trips
+
+app.get('/getAllUsersTrips', (req, res) => {
+  console.log('req.parammmmm', req.query);
+  models.Users.findAll({ where: { id: req.query.id } })
+    .then((user) => {
+      console.log(user);
+      return models.UserTrips.findAll({ where: { userId: user[0].id } });
+    })
+    .then((tripId) => {
+      console.log('DISDATRIPIDDD' + tripId);
+      return models.Trips.findAll({ where: { id: tripId[0].id } });
+    })
+    .then((response) => {
+      console.log(response[0]);
+      res.send(response[0]);
+    })
+    .catch((err) => {
+      console.log('Err trying to get user trips from the database', err);
+      res.status(400).send(err);
+    });
+});
 
 //* ****************************
 // CITIES
