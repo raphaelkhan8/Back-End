@@ -9,7 +9,6 @@ const googleMapsClient = require('@google/maps').createClient({
 const decode = (encodedObj) => {
 
 };
-
 const getNearbyPlaces = (location) => {
   const options = {
     query: 'new orleans bar',

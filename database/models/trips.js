@@ -7,8 +7,12 @@ const Trips = db.define('trips', {
     autoIncrement: true,
     primaryKey: true,
   },
-  status: {
-    type: Sequelize.INTEGER,
+  dateStart: {
+    type: Sequelize.DATE,
+    allowNull: true,
+  },
+  dateEnd: {
+    type: Sequelize.DATE,
     allowNull: true,
   },
   route: {
