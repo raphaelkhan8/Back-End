@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const express = require('express');
+const bodyParser = require('body-parser');
 const cors = require('cors');
 const passport = require('passport');
 const session = require('express-session');
@@ -16,6 +17,8 @@ const {
 const app = express();
 
 app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 app.use(cors());
 app.use(session({
   secret: SESSION_SECRET,
@@ -114,6 +117,33 @@ app.post('/addTrip', (req, res) => {
       console.log('Err trying to create the trip in the database', err);
       res.status(400).send(err);
     });
+});
+// remove a trip from the database
+app.post('/removeTrip', (req, res) => {
+  console.log('REQBODDY', req.body);
+  console.log('REQBODDY', req.body.id);
+  return models.UserTrips.destroy({
+    where: {
+      tripId: req.body.id,
+    },
+  }).then((trip) => {
+    console.log('@@@TRIP@@@' + trip)
+    models.Trips.destroy({
+      where: {
+        id: trip[0].id,
+      },
+      // defaults: {
+      //   recipe_name: recipeName,
+      //   recipe_image: imageUrl,
+      //   recipe_url: recipeUrl,
+      // },
+    })
+      .then(() => {
+        res.send(201);
+      });
+  }).catch((err) => {
+    console.error(err);
+  });
 });
 
 // gets all users past, current, and previous trips
