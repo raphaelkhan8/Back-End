@@ -5,7 +5,8 @@ const cors = require('cors');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { db, models } = require('./database');
-const { getNearbyPlaces, getPositions } = require('./API-helpers');
+const { getNearbyPlaces, getPositions, getPlacePhoto } = require('./API-helpers');
+const util = require('util');
 
 
 const app = express();
@@ -142,11 +143,22 @@ app.get('/getAllUsersTrips', (req, res) => {
 app.get('/nearbyPlaces', (req, res) => {
   getNearbyPlaces(req.query.location)
     .then((response) => {
-      const locations = response.json.results.map(place => ({
-        lat: place.geometry.location.lat,
-        lng: place.geometry.location.lng,
-      }));
-      res.status(200).send(locations);
+      // console.log(response)
+      const locations = response.json.results.map(place => {
+        const responseFields = {
+          name: place.name,
+          placeId: place.place_id,
+          lat: place.geometry.location.lat,
+          lng: place.geometry.location.lng,
+          address: place.vicinity,
+          icon: place.icon,
+          priceLevel: place.price_level,
+          rating: place.rating
+        }
+        if(place.photos) { responseFields.photos = place.photos[0].photo_reference }
+        return responseFields;
+      })
+      res.status(200).send(locations.slice(0, 5));
     })
     .catch((err) => {
       console.warn(err);
@@ -154,16 +166,31 @@ app.get('/nearbyPlaces', (req, res) => {
     });
 });
 
-app.get('/getRoutePositions', (req, res) => {
+app.get('/routePositions', (req, res) => {
   getPositions(req.query)
-    .then((coords) => {
-      console.log(coords);
+    .then(coords => {
+      // console.log(coords)
       res.status(200).send(coords);
     })
-    .catch(err => console.error(err));
-});
-const PORT = 4201;
+    .catch(err => console.error(err))
+})
 
-app.listen(PORT, () => {
+app.get('/placePhoto', (req, res) => {
+  getPlacePhoto(req.query)
+  .then(photo => {
+    console.log(photo)
+    res.set('Content-Type', photo.headers['content-type'])
+    res.status(200).send(Buffer.from(photo.data, 'base64').toString());
+  })
+    .catch(err => console.error(err))
+  })
+
+
+
+
+
+
+  const PORT = 4201;
+  app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
