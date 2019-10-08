@@ -204,10 +204,15 @@ app.post('/deleteInterest', (req, res) => {
   })
     .then((interest) => {
       console.log(interest);
-      models.UserInterests.update({
-        where: { interest: null },
-      });
-    });
+      // const category = req.body.interest;
+      const toBeNull = req.body.interest;
+      console.log(toBeNull);
+      interest.update(
+        { toBeNull: -50 },
+      );
+    })
+    .then(response => res.sendStatus(201))
+    .catch(error => console.log(error));
 });
 // get user's top five interests
 app.get('/getTopFiveInterests', (req, res) => {
