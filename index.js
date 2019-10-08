@@ -161,11 +161,24 @@ app.get('/getAllUsersTrips', (req, res) => {
 // CITIES
 //* ****************************
 
+//* ****************************
+// SHARING
+//* ****************************
+
+
+//* ****************************
+// STATS
+//* ****************************
+
+// app.get('/getStats', (req, res) => {
+
+// });
 
 //* ****************************
 // INTERESTS
 //* ****************************
 
+// likes an interest
 app.post('/likedInterest', (req, res) => {
   const field = req.body.interest;
   models.UserInterests.findOne({
@@ -179,7 +192,7 @@ app.post('/likedInterest', (req, res) => {
       console.error(err);
     });
 });
-
+// dislikes an interest
 app.post('/dislikedInterest', (req, res) => {
   const field = req.body.interest;
   models.UserInterests.findOne({
@@ -193,7 +206,24 @@ app.post('/dislikedInterest', (req, res) => {
       console.error(err);
     });
 });
-
+// deletes interest
+app.post('/deleteInterest', (req, res) => {
+  console.log('REQBUTTY', req.body);
+  models.UserInterests.findOne({
+    where: { userId: req.body.id },
+  })
+    .then((interest) => {
+      console.log(interest);
+      // const category = req.body.interest;
+      const toBeNull = req.body.interest;
+      console.log(toBeNull);
+      interest.update(
+        { toBeNull: -50 },
+      );
+    })
+    .then(response => res.sendStatus(201))
+    .catch(error => console.log(error));
+});
 // get user's top five interests
 app.get('/getTopFiveInterests', (req, res) => {
   models.Users.findAll({ where: { id: req.query.id } })
