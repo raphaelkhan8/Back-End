@@ -1,7 +1,6 @@
 require('dotenv').config();
 
 const express = require('express');
-const bodyParser = require('body-parser');
 const cors = require('cors');
 const passport = require('passport');
 const session = require('express-session');
@@ -17,8 +16,7 @@ const {
 const app = express();
 
 app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: false }));
 app.use(cors());
 app.use(session({
   secret: SESSION_SECRET,
@@ -82,7 +80,7 @@ app.get('/auth/google/callback',
   (req, res) => {
     // Successful authentication, redirect to explore page.
     console.log('REQ.USER!!!!!', req.user);
-    res.redirect(`${FRONTEND_BASE_URL}/explore?username=${req.user.username}`);
+    res.redirect(`${FRONTEND_BASE_URL}/explore`);
   });
 
 
