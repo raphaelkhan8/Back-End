@@ -9,12 +9,16 @@ const util = require('util');
 const { models } = require('./database');
 const { getNearbyPlaces, getPositions, getPlacePhoto } = require('./API-helpers');
 
+const {
+  GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CLIENT_CALLBACK_URL, FRONTEND_BASE_URL, SESSION_SECRET,
+} = process.env;
+
 const app = express();
 
 app.use(express.json());
 app.use(cors());
 app.use(session({
-  secret: 'keyboard cat',
+  secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: true,
   cookie: { secure: true },
@@ -22,10 +26,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-const {
-  GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CLIENT_CALLBACK_URL, FRONTEND_BASE_URL,
-} = process.env;
-
+// Google Sign-In
 passport.use(new GoogleStrategy({
   clientID: GOOGLE_CLIENT_ID,
   clientSecret: GOOGLE_CLIENT_SECRET,
@@ -77,7 +78,7 @@ app.get('/auth/google/callback',
   passport.authenticate('google', { failureRedirect: `${FRONTEND_BASE_URL}` }),
   (req, res) => {
     // Successful authentication, redirect to explore page.
-    console.log('REQ.USER!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!', req.user);
+    console.log('REQ.USER!!!!!', req.user);
     res.redirect(`${FRONTEND_BASE_URL}/explore?username=${req.user.username}`);
   });
 
