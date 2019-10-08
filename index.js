@@ -3,15 +3,46 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth2').Strategy;
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { db, models } = require('./database');
 const { getNearbyPlaces, getPositions, getPlacePhoto } = require('./API-helpers');
 const util = require('util');
+
 
 const app = express();
 
 app.use(express.json());
 app.use(cors());
+app.use(passport.initialize());
+app.use(passport.session());
+
+const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CLIENT_CALLBACK_URL } = process.env;
+
+passport.use(new GoogleStrategy({
+  clientID: GOOGLE_CLIENT_ID,
+  clientSecret: GOOGLE_CLIENT_SECRET,
+  callbackURL: GOOGLE_CLIENT_CALLBACK_URL,
+},
+((accessToken, refreshToken, profile, cb) => {
+  console.log('!!!!!THISISPROFILE!!!!', profile);
+  models.Users.findOrCreate({
+    where: { googleId: profile.id },
+    defaults: { username: profile.displayName },
+  })
+    .then(([user]) => {
+      cb(null, user);
+    })
+    .catch(error => console.log(error));
+})));
+
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+passport.deserializeUser((id, done) => {
+  models.Users.findById(id, (err, user) => {
+    done(err, user);
+  });
+});
 
 // CORS headers
 app.use((req, res, next) => {
@@ -26,58 +57,36 @@ app.use((req, res, next) => {
   }
 });
 
-app.get('/', (req, res) => {
-  res.send({ message: 'HELLO WORLD' });
-});
-
-
 //* ****************************
-// USERS
+// AUTH
 //* ****************************
 
-// add a user to the users table
-// app.post('/users', (req, res) => {
-//   console.log('req.bodyyyy', req.body);
-//   models.Users.create(req.body)
-//     .then((user) => {
-//       res.send(user);
-//     }).catch((err) => {
-//       console.log('Err trying to create the user in the database', err);
-//       res.status(400).send(err);
-//     });
-// });
+app.get('/auth/google',
+  passport.authenticate('google', { scope: ['profile'] }));
 
-// passport.use(new GoogleStrategy({
-//   clientID: GOOGLE_CLIENT_ID,
-//   clientSecret: GOOGLE_CLIENT_SECRET,
-//   callbackURL: "http://yourdomain:3000/auth/google/callback",
-//   passReqToCallback: true
-// },
-//   function (request, accessToken, refreshToken, profile, done) {
-//     User.findOrCreate({ googleId: profile.id }, function (err, user) {
-//       return done(err, user);
-//     });
-//   }
-// ));
-
+app.get('/auth/google/callback',
+  passport.authenticate('google', { failureRedirect: 'http://localhost:4200/' }),
+  (req, res) => {
+    res.redirect('http://localhost:4200/explore');
+  });
 
 //* ****************************
 // TRIPS
 //* ****************************
 
-// get all trips from the database
-app.get('/getAllTrips', (req, res) => {
-  console.log('req.bodyyyy', req.body);
-  models.Trips.findAll()
-    .then((trips) => {
-      const tripsArray = trips;
-      // console.log(tripsArray);
-      res.send(tripsArray);
-    }).catch((err) => {
-      console.log('Err trying to create the trip in the database', err);
-      res.status(400).send(err);
-    });
-});
+// // get all trips from the database
+// app.get('/getAllTrips', (req, res) => {
+//   console.log('req.bodyyyy', req.body);
+//   models.Trips.findAll()
+//     .then((trips) => {
+//       const tripsArray = trips;
+//       // console.log(tripsArray);
+//       res.send(tripsArray);
+//     }).catch((err) => {
+//       console.log('Err trying to create the trip in the database', err);
+//       res.status(400).send(err);
+//     });
+// });
 
 
 // add a trip to the database
@@ -94,6 +103,28 @@ app.post('/addTrip', (req, res) => {
     });
 });
 
+// gets all users past, current, and previous trips
+
+app.get('/getAllUsersTrips', (req, res) => {
+  console.log('req.parammmmm', req.query);
+  models.Users.findAll({ where: { id: req.query.id } })
+    .then((user) => {
+      console.log(user);
+      return models.UserTrips.findAll({ where: { userId: user[0].id } });
+    })
+    .then((tripId) => {
+      console.log('DISDATRIPIDDD' + tripId);
+      return models.Trips.findAll({ where: { id: tripId[0].id } });
+    })
+    .then((response) => {
+      console.log(response[0]);
+      res.send(response[0]);
+    })
+    .catch((err) => {
+      console.log('Err trying to get user trips from the database', err);
+      res.status(400).send(err);
+    });
+});
 
 //* ****************************
 // CITIES
@@ -107,7 +138,7 @@ app.post('/addTrip', (req, res) => {
 // VISTITED PLACES
 //* ****************************
 
-//GET NEARBY PLACES
+// GET NEARBY PLACES
 
 app.get('/nearbyPlaces', (req, res) => {
   getNearbyPlaces(req.query.location)
@@ -132,8 +163,8 @@ app.get('/nearbyPlaces', (req, res) => {
     .catch((err) => {
       console.warn(err);
       res.status(500).send(err);
-    })
-})
+    });
+});
 
 app.get('/routePositions', (req, res) => {
   getPositions(req.query)
