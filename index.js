@@ -6,6 +6,7 @@ const passport = require('passport');
 const session = require('express-session');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const util = require('util');
+const sequelize = require('sequelize');
 const { models } = require('./database');
 const { getNearbyPlaces, getPositions, getPlacePhoto } = require('./API-helpers');
 
@@ -88,21 +89,6 @@ app.get('/auth/google/callback',
 // TRIPS
 //* ****************************
 
-// // get all trips from the database
-// app.get('/getAllTrips', (req, res) => {
-//   console.log('req.bodyyyy', req.body);
-//   models.Trips.findAll()
-//     .then((trips) => {
-//       const tripsArray = trips;
-//       // console.log(tripsArray);
-//       res.send(tripsArray);
-//     }).catch((err) => {
-//       console.log('Err trying to create the trip in the database', err);
-//       res.status(400).send(err);
-//     });
-// });
-
-
 // add a trip to the database
 app.post('/addTrip', (req, res) => {
   console.log('req.bodyyyy', req.body);
@@ -148,7 +134,7 @@ app.get('/getAllUsersTrips', (req, res) => {
       return models.UserTrips.findAll({ where: { userId: user[0].id } });
     })
     .then((tripId) => {
-      console.log(`DISDATRIPIDDD${  tripId}`);
+      console.log(`DISDATRIPIDDD${tripId}`);
       return models.Trips.findAll({ where: { id: tripId[0].id } });
     })
     .then((response) => {
@@ -169,6 +155,60 @@ app.get('/getAllUsersTrips', (req, res) => {
 //* ****************************
 // INTERESTS
 //* ****************************
+
+app.post('/likedInterest', (req, res) => {
+  const field = req.body.interest;
+  models.UserInterests.findOne({
+    where: { userId: req.body.id },
+  })
+    .then(instance => instance.increment(field))
+    .then((response) => {
+      res.send(response);
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+});
+
+app.post('/dislikedInterest', (req, res) => {
+  const field = req.body.interest;
+  models.UserInterests.findOne({
+    where: { userId: req.body.id },
+  })
+    .then(instance => instance.decrement(field))
+    .then((response) => {
+      res.send(response);
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+});
+
+// get user's top five interests
+app.get('/getTopFiveInterests', (req, res) => {
+  models.Users.findAll({ where: { id: req.query.id } })
+    .then((user) => {
+      console.log(user);
+      return models.UserInterests.findAll({ where: { userId: user[0].id } });
+    })
+    .then((tripId) => {
+      console.log(`DISDATRIPIDDD${tripId}`);
+      return models.Trips.findAll({ where: { id: tripId[0].id } });
+    })
+    .then((response) => {
+      console.log(response[0]);
+      res.send(response[0]);
+    })
+    .catch((err) => {
+      console.log('Err trying to get user trips from the database', err);
+      res.status(400).send(err);
+    });
+});
+// change an interest's weightEffect
+app.post('/updateWeightEffect');
+
+// delete an interest with a negative weightFffect
+app.post('/deleteInterest');
 
 
 //* ****************************
