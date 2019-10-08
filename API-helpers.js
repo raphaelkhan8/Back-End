@@ -53,10 +53,14 @@ const getPositions = (addresses) => {
 
 const getPlacePhoto = (photoRef) => {
   const options = {
+    key: GOOGLE_MAPS_API_KEY,
     photoreference: photoRef.ref,
-    maxwidth: 150,
+    maxwidth: 200,
   }
-  return googleMapsClient.placesPhoto(options).asPromise();
+
+    return axios.get('https://maps.googleapis.com/maps/api/place/photo', { responseType: 'arraybuffer', params: options })
+  
+  // return googleMapsClient.placesPhoto(options).asPromise();
 }
 
 const throttle = function(callback, limit) {

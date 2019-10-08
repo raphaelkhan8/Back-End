@@ -114,17 +114,18 @@ app.get('/nearbyPlaces', (req, res) => {
     .then((response) => {
       // console.log(response)
       const locations = response.json.results.map(place => {
-        return {
+        const responseFields = {
           name: place.name,
           placeId: place.place_id,
           lat: place.geometry.location.lat,
           lng: place.geometry.location.lng,
-          photos: place.photos[0].photo_reference,
           address: place.vicinity,
           icon: place.icon,
           priceLevel: place.price_level,
           rating: place.rating
         }
+        if(place.photos) { responseFields.photos = place.photos[0].photo_reference }
+        return responseFields;
       })
       res.status(200).send(locations.slice(0, 5));
     })
@@ -146,8 +147,9 @@ app.get('/routePositions', (req, res) => {
 app.get('/placePhoto', (req, res) => {
   getPlacePhoto(req.query)
   .then(photo => {
-    res.set({'Content-Type': 'image/jpg'})
-    res.status(200).send(photo);
+    console.log(photo)
+    res.set('Content-Type', photo.headers['content-type'])
+    res.status(200).send(Buffer.from(photo.data, 'base64').toString());
   })
     .catch(err => console.error(err))
   })
