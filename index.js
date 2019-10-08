@@ -5,6 +5,16 @@ const cors = require('cors');
 const passport = require('passport');
 const session = require('express-session');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+<<<<<<< HEAD
+const { db, models } = require('./database');
+const { 
+  getNearbyPlaces, 
+  getPositions, 
+  getPlacePhoto,
+  getAutocompleteAddress
+ } = require('./API-helpers');
+=======
+>>>>>>> e02da9cc4fe9ab61f220e49b7834b7c4945e471e
 const util = require('util');
 const sequelize = require('sequelize');
 const { models } = require('./database');
@@ -254,13 +264,24 @@ app.get('/routePositions', (req, res) => {
 
 app.get('/placePhoto', (req, res) => {
   getPlacePhoto(req.query)
-    .then((photo) => {
-      console.log(photo);
-      res.set('Content-Type', photo.headers['content-type']);
-      res.status(200).send(Buffer.from(photo.data, 'base64').toString());
+  .then(photo => {
+    console.log(photo)
+    res.set('Content-Type', photo.headers['content-type'])
+    res.status(200).send(Buffer.from(photo.data, 'base64'));
+  })
+    .catch(err => console.error(err))
+  })
+
+
+  app.get('/autocompleteAddress', (req, res) => {
+    getAutocompleteAddress(req.query)
+    .then(suggestion => {
+      console.log(suggestion)
     })
-    .catch(err => console.error(err));
-});
+    .catch(err => console.error(err))
+  })
+  
+
 
 
 const PORT = 4201;
