@@ -21,7 +21,7 @@ const models = {
   UserInterests,
   UserPlaces,
 };
-
+// { force: true }
 models.Users.sync();
 models.UserStats.sync();
 models.Cities.sync();
