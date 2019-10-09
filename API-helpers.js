@@ -67,10 +67,11 @@ const getPlacePhoto = (photoRef) => {
 const getAutocompleteAddress = (query) => {
   const options = {
     input: query.input,
-    location: query.location,
-    radius: 10000,
-    components:{ country: 'us'},
-    types: 'address'
+    components:{ country: 'us'}, 
+  }
+  if(query.location.length) { 
+    options.location = query.location;
+    options.radius = 10000;
   }
   return googleMapsClient.placesAutoComplete(options).asPromise();
 }
