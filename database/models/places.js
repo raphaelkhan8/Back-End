@@ -11,6 +11,10 @@ const Places = db.define('places', {
     type: Sequelize.INTEGER,
     allowNull: false,
   },
+  status: {
+    type: Sequelize.STRING,
+    allowNull: false,
+  },
   name: {
     type: Sequelize.STRING,
     allowNull: true,
