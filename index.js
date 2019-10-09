@@ -5,11 +5,14 @@ const cors = require('cors');
 const passport = require('passport');
 const session = require('express-session');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const util = require('util');
-const { models } = require('./database');
-const {
-  getNearbyPlaces, getPositions, getPlacePhoto, getAutocompleteAddress,
-} = require('./API-helpers');
+const { db, models } = require('./database');
+const { 
+  getNearbyPlaces,
+  getPositions,
+  getPlacePhoto,
+  getAutocompleteAddress,
+ } = require('./API-helpers');
+
 
 const {
   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
@@ -348,10 +351,12 @@ app.get('/placePhoto', (req, res) => {
 });
 
 
-app.get('/autocompleteAddress', (req, res) => {
-  getAutocompleteAddress(req.query)
-    .then((suggestion) => {
-      console.log(suggestion);
+  app.get('/autocompleteAddress', (req, res) => {
+    getAutocompleteAddress(req.query)
+    .then(suggestion => {
+      console.log(suggestion)
+      const filterSuggestions = suggestion.json.predictions.map(place => place.description);
+      res.status(200).send(filterSuggestions);
     })
     .catch(err => console.error(err));
 });
