@@ -1,14 +1,14 @@
 const Sequelize = require('sequelize');
 const db = require('../db');
 
-const UserVisitedPlaces = db.define('uservisitedplaces', {
+const UserPlaces = db.define('userplaces', {
   id: {
     type: Sequelize.INTEGER,
     autoIncrement: true,
     primaryKey: true,
   },
-  weightEffect: {
-    type: Sequelize.INTEGER,
+  status: {
+    type: Sequelize.STRING,
     allowNull: true,
   },
   userId: {
@@ -24,4 +24,4 @@ const UserVisitedPlaces = db.define('uservisitedplaces', {
   timeStamps: true,
 });
 
-module.exports.UserVisitedPlaces = UserVisitedPlaces;
+module.exports.UserPlaces = UserPlaces;

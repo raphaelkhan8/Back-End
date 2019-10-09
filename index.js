@@ -30,7 +30,9 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Google Sign-In
+//* ****************************
+// GOOGLE SIGN IN
+//* ****************************
 passport.use(new GoogleStrategy({
   clientID: GOOGLE_CLIENT_ID,
   clientSecret: GOOGLE_CLIENT_SECRET,
@@ -57,7 +59,9 @@ passport.deserializeUser((id, done) => {
   });
 });
 
-// CORS headers
+//* ****************************
+// CORS HEADERS
+//* ****************************
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
@@ -137,7 +141,6 @@ app.post('/removeTrip', (req, res) => {
 });
 
 // gets all users past, current, and previous trips
-
 app.get('/getAllUsersTrips', (req, res) => {
   console.log('req.parammmmm', req.query);
   models.Users.findAll({ where: { id: req.query.id } })
@@ -246,12 +249,14 @@ app.get('/getTopFiveInterests', (req, res) => {
       res.status(400).send(err);
     });
 });
-// change an interest's weightEffect
-app.post('/updateWeightEffect');
+//* ****************************
+// YOUR PLACES
+//* ****************************
+//  POST /saveForLater
+// when something is saved for later - save to places
+// under user places set status to 'saved'
 
-// delete an interest with a negative weightFffect
-app.post('/deleteInterest');
-
+//  GET /getLikedAndSavedForLater
 
 //* ****************************
 // VISTITED PLACES
