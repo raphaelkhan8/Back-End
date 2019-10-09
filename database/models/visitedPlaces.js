@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize');
 const db = require('../db');
 
-const VisitedPlaces = db.define('visitedplaces', {
+const Places = db.define('places', {
   id: {
     type: Sequelize.INTEGER,
     autoIncrement: true,
@@ -40,4 +40,4 @@ const VisitedPlaces = db.define('visitedplaces', {
   timeStamps: true,
 });
 
-module.exports.VisitedPlaces = VisitedPlaces;
+module.exports.Places = Places;
