@@ -269,35 +269,20 @@ app.post('/saveForLater', (req, res) => {
       res.status(400).send(err);
     });
 });
-// .then((later) => {
-//   const laterData = later[0].dataValues;
-//   console.log(laterData);
-//   models.UserPlaces.findOrCreate({
-//     where: {
-//       userId: req.body.userId,
-//       userPlacesId: laterData.id,
-//       status: 'saved',
-//     },
-//   });
-//   res.send(laterData);
-// })
+
 
 //  GET /getLikedAndSavedForLater
 app.get('/getLikedAndSavedForLater', (req, res) => {
-  // console.log('req.parammmmm', req.query);
-  // models.Users.findAll({ where: { id: req.query.id } })
-  //   .then((user) => {
-  //     console.log(user);
-  //     return models.Places.findAll({ where: { userId: user[0].id } });
-  //   })
-  //   .then((response) => {
-  //     console.log(response);
-  //     res.send(response);
-  //   })
-  //   .catch((err) => {
-  //     console.log('Err trying to get user places from the database', err);
-  //     res.status(400).send(err);
-  //   });
+  console.log('req.parammmmm', req.query);
+  models.Places.findAll({ where: { userId: req.query.userId } })
+    .then((response) => {
+      console.log(response);
+      res.send(response);
+    })
+    .catch((err) => {
+      console.log('Err trying to get user places from the database', err);
+      res.status(400).send(err);
+    });
 });
 //* ****************************
 // VISTITED PLACES
