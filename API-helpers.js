@@ -10,21 +10,21 @@ const decode = (encodedObj) => {
 
 };
 const getNearbyPlaces = (location) => {
-  //lat: 29.96768435314543,
+  // lat: 29.96768435314543,
   // lng: -90.05025405587452
-    
-    const options = {
-      // location: `29.96768435314543,-90.05025405587452`,
-      location,
-      keyword: 'coffee',
-      opennow: true,
-      rankby: 'distance'
-    }
-    const test = {
-      placeid: 'EisxMyBNYXJrZXQgU3RyZWV0LCBXaWxtaW5ndG9uLCBOQyAyODQwMSwgVVNB'
-    }
-    return googleMapsClient.placesNearby(options).asPromise();
-}
+
+  const options = {
+    // location: `29.96768435314543,-90.05025405587452`,
+    location,
+    keyword: 'coffee',
+    opennow: true,
+    rankby: 'distance',
+  };
+  const test = {
+    placeid: 'EisxMyBNYXJrZXQgU3RyZWV0LCBXaWxtaW5ndG9uLCBOQyAyODQwMSwgVVNB',
+  };
+  return googleMapsClient.placesNearby(options).asPromise();
+};
 
 const getPositions = (addresses) => {
   const results = [];
@@ -59,10 +59,10 @@ const getPlacePhoto = (photoRef) => {
     maxwidth: 100,
   }
 
-    return axios.get('https://maps.googleapis.com/maps/api/place/photo', { responseType: 'arraybuffer', params: options })
-  
+  return axios.get('https://maps.googleapis.com/maps/api/place/photo', { responseType: 'arraybuffer', params: options });
+
   // return googleMapsClient.placesPhoto(options).asPromise();
-}
+};
 
 const getAutocompleteAddress = (query) => {
   const options = {

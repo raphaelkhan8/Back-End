@@ -5,6 +5,7 @@ const cors = require('cors');
 const passport = require('passport');
 const session = require('express-session');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+<<<<<<< HEAD
 const { db, models } = require('./database');
 const { 
   getNearbyPlaces,
@@ -13,9 +14,17 @@ const {
   getAutocompleteAddress,
  } = require('./API-helpers');
 
+=======
+const util = require('util');
+const { models } = require('./database');
+const {
+  getNearbyPlaces, getPositions, getPlacePhoto, getAutocompleteAddress,
+} = require('./API-helpers');
+>>>>>>> fda193c688615385412f619528aae8f825fd985b
 
 const {
-  GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CLIENT_CALLBACK_URL, FRONTEND_BASE_URL, SESSION_SECRET,
+  GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
+  GOOGLE_CLIENT_CALLBACK_URL, FRONTEND_BASE_URL, SESSION_SECRET,
 } = process.env;
 
 const app = express();
@@ -32,7 +41,9 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Google Sign-In
+//* ****************************
+// GOOGLE SIGN IN
+//* ****************************
 passport.use(new GoogleStrategy({
   clientID: GOOGLE_CLIENT_ID,
   clientSecret: GOOGLE_CLIENT_SECRET,
@@ -59,7 +70,9 @@ passport.deserializeUser((id, done) => {
   });
 });
 
-// CORS headers
+//* ****************************
+// CORS HEADERS
+//* ****************************
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
@@ -85,7 +98,7 @@ app.get('/auth/google/callback',
   (req, res) => {
     // Successful authentication, redirect to explore page.
     console.log('REQ.USER!!!!!', req.user);
-    res.redirect(`${FRONTEND_BASE_URL}/explore`);
+    res.redirect(`${FRONTEND_BASE_URL}/explore?id=${req.user.id}`);
   });
 
 
@@ -94,14 +107,24 @@ app.get('/auth/google/callback',
 //* ****************************
 
 // add a trip to the database
+// ALSO WORKS FOR SHARING
 app.post('/addTrip', (req, res) => {
   console.log('req.bodyyyy', req.body);
-  models.Trips.create(req.body)
+  return models.Trips.findOrCreate({
+    where: { route: req.body.route },
+  })
     .then((trip) => {
-      const tripData = trip.dataValues;
+      const tripData = trip[0].dataValues;
       console.log(tripData);
+      models.UserTrips.findOrCreate({
+        where: {
+          userId: req.body.userId,
+          tripId: tripData.id,
+        },
+      });
       res.send(tripData);
-    }).catch((err) => {
+    })
+    .catch((err) => {
       console.log('Err trying to create the trip in the database', err);
       res.status(400).send(err);
     });
@@ -129,7 +152,6 @@ app.post('/removeTrip', (req, res) => {
 });
 
 // gets all users past, current, and previous trips
-
 app.get('/getAllUsersTrips', (req, res) => {
   console.log('req.parammmmm', req.query);
   models.Users.findAll({ where: { id: req.query.id } })
@@ -155,17 +177,47 @@ app.get('/getAllUsersTrips', (req, res) => {
 // CITIES
 //* ****************************
 
+//* ****************************
+// SHARING
+//* ****************************
+
+//* ****************************
+// STATS
+//* ****************************
+
+// app.get('/getStats', (req, res) => {
+
+// });
 
 //* ****************************
 // INTERESTS
 //* ****************************
 
+// likes an interest
 app.post('/likedInterest', (req, res) => {
+  const field = req.body.interest;
+  models.UserInterests.findOne({
+    where: { userId: req.body.userId },
+  })
+    .then((instance) => {
+      instance.increment(field);
+      return models.Places.findOrCreate({
+        where: {
+          name: req.body.name,
+          userId: req.body.userId,
+          status: 'liked',
+        },
+      });
+    });
+});
+
+// dislikes an interest
+app.post('/dislikedInterest', (req, res) => {
   const field = req.body.interest;
   models.UserInterests.findOne({
     where: { userId: req.body.id },
   })
-    .then(instance => instance.increment(field))
+    .then(instance => instance.decrement(field))
     .then((response) => {
       res.send(response);
     })
@@ -173,13 +225,16 @@ app.post('/likedInterest', (req, res) => {
       console.error(err);
     });
 });
-
-app.post('/dislikedInterest', (req, res) => {
-  const field = req.body.interest;
+// deletes interest
+app.post('/deleteInterest', (req, res) => {
+  // const field = req.body.interest;
   models.UserInterests.findOne({
     where: { userId: req.body.id },
   })
-    .then(instance => instance.decrement(field))
+    .then((instance) => {
+      const field = req.body.interest;
+      instance.decrement([field], { by: 50 });
+    })
     .then((response) => {
       res.send(response);
     })
@@ -208,13 +263,41 @@ app.get('/getTopFiveInterests', (req, res) => {
       res.status(400).send(err);
     });
 });
-// change an interest's weightEffect
-app.post('/updateWeightEffect');
+//* ****************************
+// YOUR PLACES
+//* ****************************
+//  POST /saveForLater
+// when something is saved for later - save to places
+// under user places set status to 'saved'
+app.post('/saveForLater', (req, res) => {
+  console.log('req.bodyyyy', req.body);
+  return models.Places.findOrCreate({
+    where: {
+      name: req.body.name,
+      userId: req.body.userId,
+      status: 'saved',
+    },
+  }).then(response => res.send(response))
+    .catch((err) => {
+      console.log('Err trying to save this place in the database', err);
+      res.status(400).send(err);
+    });
+});
 
-// delete an interest with a negative weightFffect
-app.post('/deleteInterest');
 
-
+//  GET /getLikedAndSavedForLater
+app.get('/getLikedAndSavedForLater', (req, res) => {
+  console.log('req.parammmmm', req.query);
+  models.Places.findAll({ where: { userId: req.query.userId } })
+    .then((response) => {
+      console.log(response);
+      res.send(response);
+    })
+    .catch((err) => {
+      console.log('Err trying to get user places from the database', err);
+      res.status(400).send(err);
+    });
+});
 //* ****************************
 // VISTITED PLACES
 //* ****************************
@@ -258,13 +341,13 @@ app.get('/routePositions', (req, res) => {
 
 app.get('/placePhoto', (req, res) => {
   getPlacePhoto(req.query)
-  .then(photo => {
-    console.log(photo)
-    res.set('Content-Type', photo.headers['content-type'])
-    res.status(200).send(Buffer.from(photo.data, 'base64'));
-  })
-    .catch(err => console.error(err))
-  })
+    .then((photo) => {
+      console.log(photo);
+      res.set('Content-Type', photo.headers['content-type']);
+      res.status(200).send(Buffer.from(photo.data, 'base64'));
+    })
+    .catch(err => console.error(err));
+});
 
 
   app.get('/autocompleteAddress', (req, res) => {
@@ -274,10 +357,8 @@ app.get('/placePhoto', (req, res) => {
       const filterSuggestions = suggestion.json.predictions.map(place => place.description);
       res.status(200).send(filterSuggestions);
     })
-    .catch(err => console.error(err))
-  })
-  
-
+    .catch(err => console.error(err));
+});
 
 
 const PORT = 4201;

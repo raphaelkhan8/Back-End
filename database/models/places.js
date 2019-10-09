@@ -1,11 +1,19 @@
 const Sequelize = require('sequelize');
 const db = require('../db');
 
-const VisitedPlaces = db.define('visitedplaces', {
+const Places = db.define('places', {
   id: {
     type: Sequelize.INTEGER,
     autoIncrement: true,
     primaryKey: true,
+  },
+  userId: {
+    type: Sequelize.INTEGER,
+    allowNull: false,
+  },
+  status: {
+    type: Sequelize.STRING,
+    allowNull: false,
   },
   name: {
     type: Sequelize.STRING,
@@ -35,13 +43,9 @@ const VisitedPlaces = db.define('visitedplaces', {
     type: Sequelize.STRING,
     allowNull: true,
   },
-  interestsId: {
-    type: Sequelize.INTEGER,
-    allowNull: true,
-  },
 }, {
   freezeTableName: true,
   timeStamps: true,
 });
 
-module.exports.VisitedPlaces = VisitedPlaces;
+module.exports.Places = Places;
