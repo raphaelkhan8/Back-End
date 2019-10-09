@@ -5,20 +5,11 @@ const cors = require('cors');
 const passport = require('passport');
 const session = require('express-session');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-<<<<<<< HEAD
-const { db, models } = require('./database');
-const { 
-  getNearbyPlaces, 
-  getPositions, 
-  getPlacePhoto,
-  getAutocompleteAddress
- } = require('./API-helpers');
-=======
->>>>>>> e02da9cc4fe9ab61f220e49b7834b7c4945e471e
 const util = require('util');
-const sequelize = require('sequelize');
 const { models } = require('./database');
-const { getNearbyPlaces, getPositions, getPlacePhoto } = require('./API-helpers');
+const {
+ getNearbyPlaces, getPositions, getPlacePhoto, getAutocompleteAddress 
+} = require('./API-helpers');
 
 const {
   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CLIENT_CALLBACK_URL, FRONTEND_BASE_URL, SESSION_SECRET,
@@ -208,22 +199,22 @@ app.post('/dislikedInterest', (req, res) => {
 });
 // deletes interest
 app.post('/deleteInterest', (req, res) => {
-  console.log('REQBUTTY', req.body);
+  // const field = req.body.interest;
   models.UserInterests.findOne({
     where: { userId: req.body.id },
   })
-    .then((interest) => {
-      console.log(interest);
-      // const category = req.body.interest;
-      const toBeNull = req.body.interest;
-      console.log(toBeNull);
-      interest.update(
-        { toBeNull: -50 },
-      );
+    .then((instance) => {
+      const field = req.body.interest;
+      instance.decrement([field], { by: 50 });
     })
-    .then(response => res.sendStatus(201))
-    .catch(error => console.log(error));
+    .then((response) => {
+      res.send(response);
+    })
+    .catch((err) => {
+      console.error(err);
+    });
 });
+
 // get user's top five interests
 app.get('/getTopFiveInterests', (req, res) => {
   models.Users.findAll({ where: { id: req.query.id } })
@@ -294,24 +285,22 @@ app.get('/routePositions', (req, res) => {
 
 app.get('/placePhoto', (req, res) => {
   getPlacePhoto(req.query)
-  .then(photo => {
-    console.log(photo)
-    res.set('Content-Type', photo.headers['content-type'])
-    res.status(200).send(Buffer.from(photo.data, 'base64'));
-  })
-    .catch(err => console.error(err))
-  })
-
-
-  app.get('/autocompleteAddress', (req, res) => {
-    getAutocompleteAddress(req.query)
-    .then(suggestion => {
-      console.log(suggestion)
+    .then((photo) => {
+      console.log(photo);
+      res.set('Content-Type', photo.headers['content-type']);
+      res.status(200).send(Buffer.from(photo.data, 'base64'));
     })
-    .catch(err => console.error(err))
-  })
-  
+    .catch(err => console.error(err));
+});
 
+
+app.get('/autocompleteAddress', (req, res) => {
+  getAutocompleteAddress(req.query)
+    .then((suggestion) => {
+      console.log(suggestion);
+    })
+    .catch(err => console.error(err));
+});
 
 
 const PORT = 4201;
