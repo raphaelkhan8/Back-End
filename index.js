@@ -186,14 +186,17 @@ app.get('/getAllUsersTrips', (req, res) => {
 app.post('/likedInterest', (req, res) => {
   const field = req.body.interest;
   models.UserInterests.findOne({
-    where: { userId: req.body.id },
+    where: { userId: req.body.userId },
   })
-    .then(instance => instance.increment(field))
-    .then((response) => {
-      res.send(response);
-    })
-    .catch((err) => {
-      console.error(err);
+    .then((instance) => {
+      instance.increment(field);
+      return models.Places.findOrCreate({
+        where: {
+          name: req.body.name,
+          userId: req.body.userId,
+          status: 'liked',
+        },
+      });
     });
 });
 
