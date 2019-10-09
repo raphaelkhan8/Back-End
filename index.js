@@ -12,7 +12,8 @@ const {
 } = require('./API-helpers');
 
 const {
-  GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CLIENT_CALLBACK_URL, FRONTEND_BASE_URL, SESSION_SECRET,
+  GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
+  GOOGLE_CLIENT_CALLBACK_URL, FRONTEND_BASE_URL, SESSION_SECRET,
 } = process.env;
 
 const app = express();
@@ -91,7 +92,7 @@ app.get('/auth/google/callback',
 //* ****************************
 
 // add a trip to the database
-// ALSO WORKS FOR SHARING 
+// ALSO WORKS FOR SHARING
 app.post('/addTrip', (req, res) => {
   console.log('req.bodyyyy', req.body);
   return models.Trips.findOrCreate({
@@ -165,7 +166,6 @@ app.get('/getAllUsersTrips', (req, res) => {
 //* ****************************
 // SHARING
 //* ****************************
-app;
 
 //* ****************************
 // STATS
