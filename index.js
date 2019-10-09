@@ -253,8 +253,8 @@ app.get('/getAllInterests', (req, res) => {
       }
       const sortedInterestsArray = interestsArr.sort((a, b) => b[1] - a[1]);
       const sortedArray = sortedInterestsArray.filter(interestArr => interestArr[0] !== 'id' && interestArr[0] !== 'userId');
-      const topFiveArr = sortedArray.map(arr => arr[0]).flat();
-      res.send(topFiveArr);
+      const sortedInterestsArr = sortedArray.map(arr => arr[0]).flat();
+      res.send(sortedInterestsArr);
     });
 });
 
