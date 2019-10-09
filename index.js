@@ -8,7 +8,7 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const util = require('util');
 const { models } = require('./database');
 const {
- getNearbyPlaces, getPositions, getPlacePhoto, getAutocompleteAddress 
+  getNearbyPlaces, getPositions, getPlacePhoto, getAutocompleteAddress,
 } = require('./API-helpers');
 
 const {
@@ -93,12 +93,21 @@ app.get('/auth/google/callback',
 // add a trip to the database
 app.post('/addTrip', (req, res) => {
   console.log('req.bodyyyy', req.body);
-  models.Trips.create(req.body)
+  return models.Trips.findOrCreate({
+    where: { route: req.body.route },
+  })
     .then((trip) => {
-      const tripData = trip.dataValues;
+      const tripData = trip[0].dataValues;
       console.log(tripData);
+      models.UserTrips.findOrCreate({
+        where: {
+          userId: req.body.userId,
+          tripId: tripData.id,
+        },
+      });
       res.send(tripData);
-    }).catch((err) => {
+    })
+    .catch((err) => {
       console.log('Err trying to create the trip in the database', err);
       res.status(400).send(err);
     });
@@ -155,7 +164,7 @@ app.get('/getAllUsersTrips', (req, res) => {
 //* ****************************
 // SHARING
 //* ****************************
-
+app;
 
 //* ****************************
 // STATS
