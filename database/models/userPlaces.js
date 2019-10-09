@@ -7,8 +7,8 @@ const UserPlaces = db.define('userplaces', {
     autoIncrement: true,
     primaryKey: true,
   },
-  weightEffect: {
-    type: Sequelize.INTEGER,
+  status: {
+    type: Sequelize.STRING,
     allowNull: true,
   },
   userId: {
