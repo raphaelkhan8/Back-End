@@ -30,6 +30,7 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+
 //* ****************************
 // GOOGLE SIGN IN
 //* ****************************
@@ -58,6 +59,7 @@ passport.deserializeUser((id, done) => {
     done(err, user);
   });
 });
+
 
 //* ****************************
 // CORS HEADERS
@@ -118,6 +120,7 @@ app.post('/addTrip', (req, res) => {
       res.status(400).send(err);
     });
 });
+
 // remove a trip from the database
 app.post('/removeTrip', (req, res) => {
   console.log('REQBODDY', req.body);
@@ -178,6 +181,7 @@ app.get('/getAllUsersTrips', (req, res) => {
 
 // });
 
+
 //* ****************************
 // INTERESTS
 //* ****************************
@@ -211,6 +215,7 @@ app.post('/dislikedInterest', (req, res) => {
       console.error(err);
     });
 });
+
 // deletes interest
 app.post('/deleteInterest', (req, res) => {
   // const field = req.body.interest;
@@ -229,29 +234,32 @@ app.post('/deleteInterest', (req, res) => {
     });
 });
 
-// get user's top five interests
-app.get('/getTopFiveInterests', (req, res) => {
+// get all of the interests sorted by likes
+// sends back an array of all the interests sorted by number of likes
+app.get('/getAllInterests', (req, res) => {
   models.Users.findAll({ where: { id: req.query.id } })
     .then((user) => {
       console.log(user);
       return models.UserInterests.findAll({ where: { userId: user[0].id } });
     })
-    .then((tripId) => {
-      console.log(`DISDATRIPIDDD${tripId}`);
-      return models.Trips.findAll({ where: { id: tripId[0].id } });
-    })
-    .then((response) => {
-      console.log(response[0]);
-      res.send(response[0]);
-    })
-    .catch((err) => {
-      console.log('Err trying to get user trips from the database', err);
-      res.status(400).send(err);
+    .then((interests) => {
+      const interestsObj = interests[0].dataValues;
+      const interestsArr = [];
+      for (const category in interestsObj) {
+        interestsArr.push([category, interestsObj[category]]);
+      }
+      const sortedInterestsArray = interestsArr.sort((a, b) => b[1] - a[1]);
+      const sortedArray = sortedInterestsArray.filter(interestArr => interestArr[0] !== 'id' && interestArr[0] !== 'userId');
+      const topFiveArr = sortedArray.map(arr => arr[0]).flat();
+      res.send(topFiveArr);
     });
 });
+
+
 //* ****************************
 // YOUR PLACES
 //* ****************************
+
 //  POST /saveForLater
 // when something is saved for later - save to places
 // under user places set status to 'saved'
@@ -279,7 +287,7 @@ app.post('/saveForLater', (req, res) => {
 });
 
 //  GET /getLikedAndSavedForLater
-app.get('getLikedAndSavedForLater', (req, res) => {
+app.get('/getLikedAndSavedForLater', (req, res) => {
   console.log('req.parammmmm', req.query);
   models.Users.findAll({ where: { id: req.query.id } })
     .then((user) => {
@@ -299,12 +307,13 @@ app.get('getLikedAndSavedForLater', (req, res) => {
       res.status(400).send(err);
     });
 });
+
+
 //* ****************************
 // VISTITED PLACES
 //* ****************************
 
 // GET NEARBY PLACES
-
 app.get('/nearbyPlaces', (req, res) => {
   getNearbyPlaces(req.query.location)
     .then((response) => {
