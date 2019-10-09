@@ -251,7 +251,11 @@ app.get('/getTopFiveInterests', (req, res) => {
 //* ****************************
 // YOUR PLACES
 //* ****************************
+//  POST /saveForLater
+// when something is saved for later - save to places
+// under user places set status to 'saved'
 
+//  GET /getLikedAndSavedForLater
 
 //* ****************************
 // VISTITED PLACES
