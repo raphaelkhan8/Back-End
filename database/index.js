@@ -31,7 +31,7 @@ models.UserCities.sync();
 models.UserStats.sync();
 models.UserTrips.sync();
 models.UserInterests.sync();
-models.UserPlaces.sync({ force: true });
+models.UserPlaces.sync();
 
 db.authenticate()
   .then(() => {
