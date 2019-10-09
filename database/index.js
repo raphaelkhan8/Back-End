@@ -6,7 +6,6 @@ const { UserCities } = require('./models/userCities');
 const { UserTrips } = require('./models/userTrips');
 const { UserStats } = require('./models/userStats');
 const { UserInterests } = require('./models/userInterests');
-const { UserPlaces } = require('./models/userPlaces');
 
 const db = require('./db');
 
@@ -19,9 +18,8 @@ const models = {
   UserStats,
   UserTrips,
   UserInterests,
-  UserPlaces,
 };
-
+// { force: true }
 models.Users.sync();
 models.UserStats.sync();
 models.Cities.sync();
@@ -31,7 +29,6 @@ models.UserCities.sync();
 models.UserStats.sync();
 models.UserTrips.sync();
 models.UserInterests.sync();
-models.UserPlaces.sync();
 
 db.authenticate()
   .then(() => {
