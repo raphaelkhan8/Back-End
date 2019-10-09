@@ -87,7 +87,7 @@ app.get('/auth/google/callback',
   (req, res) => {
     // Successful authentication, redirect to explore page.
     console.log('REQ.USER!!!!!', req.user);
-    res.redirect(`${FRONTEND_BASE_URL}/explore`);
+    res.redirect(`${FRONTEND_BASE_URL}/explore?id=${req.user.id}`);
   });
 
 
@@ -196,6 +196,7 @@ app.post('/likedInterest', (req, res) => {
       console.error(err);
     });
 });
+
 // dislikes an interest
 app.post('/dislikedInterest', (req, res) => {
   const field = req.body.interest;
