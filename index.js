@@ -253,6 +253,27 @@ app.get('/getTopFiveInterests', (req, res) => {
 // YOUR PLACES
 //* ****************************
 //  POST /saveForLater
+app.post('/saveForLater', (req, res) => {
+  console.log('req.bodyyyy', req.body);
+  return models.Places.findOrCreate({
+    where: { name: req.body.name },
+  })
+    .then((later) => {
+      const laterData = later[0].dataValues;
+      console.log(laterData);
+      models.UserPlaces.findOrCreate({
+        where: {
+          userId: req.body.userId,
+          userPlacesId: laterData.id,
+        },
+      });
+      res.send(laterData);
+    })
+    .catch((err) => {
+      console.log('Err trying to create the trip in the database', err);
+      res.status(400).send(err);
+    });
+});
 // when something is saved for later - save to places
 // under user places set status to 'saved'
 
