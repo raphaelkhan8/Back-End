@@ -253,6 +253,8 @@ app.get('/getTopFiveInterests', (req, res) => {
 // YOUR PLACES
 //* ****************************
 //  POST /saveForLater
+// when something is saved for later - save to places
+// under user places set status to 'saved'
 app.post('/saveForLater', (req, res) => {
   console.log('req.bodyyyy', req.body);
   return models.Places.findOrCreate({
@@ -275,8 +277,6 @@ app.post('/saveForLater', (req, res) => {
       res.status(400).send(err);
     });
 });
-// when something is saved for later - save to places
-// under user places set status to 'saved'
 
 //  GET /getLikedAndSavedForLater
 
