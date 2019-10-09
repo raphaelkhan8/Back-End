@@ -7,6 +7,10 @@ const Places = db.define('places', {
     autoIncrement: true,
     primaryKey: true,
   },
+  userId: {
+    type: Sequelize.INTEGER,
+    allowNull: false,
+  },
   name: {
     type: Sequelize.STRING,
     allowNull: true,
