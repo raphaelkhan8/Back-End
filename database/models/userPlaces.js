@@ -15,7 +15,7 @@ const UserPlaces = db.define('userplaces', {
     type: Sequelize.INTEGER,
     allowNull: false,
   },
-  visitedPlacesId: {
+  userPlacesId: {
     type: Sequelize.INTEGER,
     allowNull: true,
   },
