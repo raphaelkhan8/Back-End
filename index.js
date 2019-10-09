@@ -91,6 +91,7 @@ app.get('/auth/google/callback',
 //* ****************************
 
 // add a trip to the database
+// ALSO WORKS FOR SHARING 
 app.post('/addTrip', (req, res) => {
   console.log('req.bodyyyy', req.body);
   return models.Trips.findOrCreate({
