@@ -5,7 +5,6 @@ const cors = require('cors');
 const passport = require('passport');
 const session = require('express-session');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-<<<<<<< HEAD
 const { db, models } = require('./database');
 const { 
   getNearbyPlaces,
@@ -14,13 +13,6 @@ const {
   getAutocompleteAddress,
  } = require('./API-helpers');
 
-=======
-const util = require('util');
-const { models } = require('./database');
-const {
-  getNearbyPlaces, getPositions, getPlacePhoto, getAutocompleteAddress,
-} = require('./API-helpers');
->>>>>>> fda193c688615385412f619528aae8f825fd985b
 
 const {
   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
