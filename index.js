@@ -265,6 +265,7 @@ app.post('/saveForLater', (req, res) => {
         where: {
           userId: req.body.userId,
           userPlacesId: laterData.id,
+          status: 'saved',
         },
       });
       res.send(laterData);
