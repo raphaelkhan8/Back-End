@@ -186,14 +186,17 @@ app.get('/getAllUsersTrips', (req, res) => {
 app.post('/likedInterest', (req, res) => {
   const field = req.body.interest;
   models.UserInterests.findOne({
-    where: { userId: req.body.id },
+    where: { userId: req.body.userId },
   })
-    .then(instance => instance.increment(field))
-    .then((response) => {
-      res.send(response);
-    })
-    .catch((err) => {
-      console.error(err);
+    .then((instance) => {
+      instance.increment(field);
+      return models.Places.findOrCreate({
+        where: {
+          name: req.body.name,
+          userId: req.body.userId,
+          status: 'liked',
+        },
+      });
     });
 });
 
@@ -258,41 +261,26 @@ app.get('/getTopFiveInterests', (req, res) => {
 app.post('/saveForLater', (req, res) => {
   console.log('req.bodyyyy', req.body);
   return models.Places.findOrCreate({
-    where: { name: req.body.name },
-  })
-    .then((later) => {
-      const laterData = later[0].dataValues;
-      console.log(laterData);
-      models.UserPlaces.findOrCreate({
-        where: {
-          userId: req.body.userId,
-          userPlacesId: laterData.id,
-          status: 'saved',
-        },
-      });
-      res.send(laterData);
-    })
+    where: {
+      name: req.body.name,
+      userId: req.body.userId,
+      status: 'saved',
+    },
+  }).then(response => res.send(response))
     .catch((err) => {
       console.log('Err trying to save this place in the database', err);
       res.status(400).send(err);
     });
 });
 
+
 //  GET /getLikedAndSavedForLater
-app.get('getLikedAndSavedForLater', (req, res) => {
+app.get('/getLikedAndSavedForLater', (req, res) => {
   console.log('req.parammmmm', req.query);
-  models.Users.findAll({ where: { id: req.query.id } })
-    .then((user) => {
-      console.log(user);
-      return models.UserPlaces.findAll({ where: { userId: user[0].id } });
-    })
-    .then((placeId) => {
-      console.log(`DISDAPLACE${placeId}`);
-      return models.Trips.findAll({ where: { id: placeId[0].id } });
-    })
+  models.Places.findAll({ where: { userId: req.query.userId } })
     .then((response) => {
-      console.log(response[0]);
-      res.send(response[0]);
+      console.log(response);
+      res.send(response);
     })
     .catch((err) => {
       console.log('Err trying to get user places from the database', err);
