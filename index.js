@@ -270,7 +270,7 @@ app.post('/saveForLater', (req, res) => {
       res.send(laterData);
     })
     .catch((err) => {
-      console.log('Err trying to create the trip in the database', err);
+      console.log('Err trying to save this place in the database', err);
       res.status(400).send(err);
     });
 });
