@@ -279,20 +279,16 @@ app.post('/saveForLater', (req, res) => {
 });
 
 //  GET /getLikedAndSavedForLater
-app.get('getLikedAndSavedForLater', (req, res) => {
+app.get('/getLikedAndSavedForLater', (req, res) => {
   console.log('req.parammmmm', req.query);
   models.Users.findAll({ where: { id: req.query.id } })
     .then((user) => {
       console.log(user);
       return models.UserPlaces.findAll({ where: { userId: user[0].id } });
     })
-    .then((placeId) => {
-      console.log(`DISDAPLACE${placeId}`);
-      return models.Trips.findAll({ where: { id: placeId[0].id } });
-    })
     .then((response) => {
-      console.log(response[0]);
-      res.send(response[0]);
+      console.log(response);
+      res.send(response);
     })
     .catch((err) => {
       console.log('Err trying to get user places from the database', err);
