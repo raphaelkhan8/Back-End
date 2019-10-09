@@ -248,6 +248,10 @@ app.get('/getTopFiveInterests', (req, res) => {
       res.status(400).send(err);
     });
 });
+//* ****************************
+// YOUR PLACES
+//* ****************************
+
 
 //* ****************************
 // VISTITED PLACES
