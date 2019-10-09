@@ -35,10 +35,6 @@ const VisitedPlaces = db.define('visitedplaces', {
     type: Sequelize.STRING,
     allowNull: true,
   },
-  interestsId: {
-    type: Sequelize.INTEGER,
-    allowNull: true,
-  },
 }, {
   freezeTableName: true,
   timeStamps: true,
