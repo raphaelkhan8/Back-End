@@ -154,11 +154,14 @@ app.get('/getAllUsersTrips', (req, res) => {
       console.log(user);
       return models.UserTrips.findAll({ where: { userId: user[0].id } });
     })
-    .then((tripId) => {
-      return Promise.all(tripId.map((trip) => {
-        console.log('DISDATRIPIDDD', trip);
-        return models.Trips.findAll({ where: { id: trip.tripId } });
-      }));
+    .then(tripId => Promise.all(tripId.map((trip) => {
+      console.log('DISDATRIPIDDD', trip);
+      return models.Trips.findAll({ where: { id: trip.tripId } });
+    })))
+    .then((tripArray) => {
+      tripArray.map((trip) => {
+        console.log('@@@ INDIVIDUAL TRIP @@@', trip);
+      });
     })
     .then((response) => {
       console.log(response);
