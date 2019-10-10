@@ -285,6 +285,8 @@ app.get('/getLikedAndSavedForLater', (req, res) => {
 
 // GET ALL NEARBY PLACES
 // this endpoint should hit when SHOW ALL RESULTS button is clicked in the Explore page
+// returns an array of arrays where each array contains a bunch of objects: [[{}, {}, ...], [{}, {},...], ...]
+// each inner array represets an interest while each object is a nearby place
 app.get('/nearbyPlaces', (req, res) => {
   models.Users.findAll({ where: { id: req.query.id } })
     .then((user) => {
