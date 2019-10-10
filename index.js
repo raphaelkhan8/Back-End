@@ -160,15 +160,20 @@ app.get('/getAllUsersTrips', (req, res) => {
     })))
     .then((tripArray) => {
       tripArray.map((trip) => {
-        console.log('@@@ INDIVIDUAL TRIP @@@', trip);
+        const currently = new Date();
+        // console.log('@@@ DATE START @@@', trip[0].dataValues.dateStart);
+        // console.log('@@@ DATE END @@@', trip[0].dataValues.dateEnd);
+        if (trip.dateEnd < currently) {
+          console.log('this trip has ended');
+        }
       });
     })
     .then((response) => {
-      console.log(response);
+      // console.log(response);
       res.send(response);
     })
     .catch((err) => {
-      console.log('Err trying to get user trips from the database', err);
+      // console.log('Err trying to get user trips from the database', err);
       res.status(400).send(err);
     });
 });
