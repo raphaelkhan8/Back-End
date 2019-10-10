@@ -165,7 +165,10 @@ app.get('/getAllUsersTrips', (req, res) => {
         // console.log('@@@ DATE END @@@', trip[0].dataValues.dateEnd);
         if (trip.dateEnd < currently) {
           console.log('this trip has ended');
+        } if (trip.dateStart > currently) {
+          console.log('this trip is in the future');
         }
+        console.log('youre on this trip');
       });
     })
     .then((response) => {
