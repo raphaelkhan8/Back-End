@@ -154,12 +154,10 @@ app.get('/getAllUsersTrips', (req, res) => {
       console.log(user);
       return models.UserTrips.findAll({ where: { userId: user[0].id } });
     })
-    .then((tripId) => {
-      return Promise.all(tripId.map((trip) => {
-        console.log('DISDATRIPIDDD', trip);
-        return models.Trips.findAll({ where: { id: trip.tripId } });
-      }));
-    })
+    .then(tripId => Promise.all(tripId.map((trip) => {
+      console.log('DISDATRIPIDDD', trip);
+      return models.Trips.findAll({ where: { id: trip.tripId } });
+    })))
     .then((response) => {
       console.log(response);
       res.send(response);
@@ -258,8 +256,13 @@ app.get('/getAllInterests', (req, res) => {
       }
       const sortedInterestsArray = interestsArr.sort((a, b) => b[1] - a[1]);
       const sortedArray = sortedInterestsArray.filter(interestArr => interestArr[0] !== 'id' && interestArr[0] !== 'userId');
-      const sortedInterestsArr = sortedArray.map(arr => arr[0]).flat();
-      res.send(sortedInterestsArr);
+      return sortedArray.map(arr => arr[0]).flat();
+    })
+    .then((response) => {
+      res.send(response);
+    })
+    .catch((err) => {
+      console.error(err);
     });
 });
 
