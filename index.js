@@ -6,12 +6,12 @@ const passport = require('passport');
 const session = require('express-session');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { db, models } = require('./database');
-const { 
+const {
   getNearbyPlaces,
   getPositions,
   getPlacePhoto,
   getAutocompleteAddress,
- } = require('./API-helpers');
+} = require('./API-helpers');
 
 
 const {
@@ -155,12 +155,14 @@ app.get('/getAllUsersTrips', (req, res) => {
       return models.UserTrips.findAll({ where: { userId: user[0].id } });
     })
     .then((tripId) => {
-      console.log(`DISDATRIPIDDD${tripId}`);
-      return models.Trips.findAll({ where: { id: tripId[0].id } });
+      return Promise.all(tripId.map((trip) => {
+        console.log('DISDATRIPIDDD', trip);
+        return models.Trips.findAll({ where: { id: trip.tripId } });
+      }));
     })
     .then((response) => {
-      console.log(response[0]);
-      res.send(response[0]);
+      console.log(response);
+      res.send(response);
     })
     .catch((err) => {
       console.log('Err trying to get user trips from the database', err);
@@ -351,10 +353,10 @@ app.get('/placePhoto', (req, res) => {
 });
 
 
-  app.get('/autocompleteAddress', (req, res) => {
-    getAutocompleteAddress(req.query)
-    .then(suggestion => {
-      console.log(suggestion)
+app.get('/autocompleteAddress', (req, res) => {
+  getAutocompleteAddress(req.query)
+    .then((suggestion) => {
+      console.log(suggestion);
       const filterSuggestions = suggestion.json.predictions.map(place => place.description);
       res.status(200).send(filterSuggestions);
     })
