@@ -154,18 +154,32 @@ app.get('/getAllUsersTrips', (req, res) => {
       console.log(user);
       return models.UserTrips.findAll({ where: { userId: user[0].id } });
     })
-    .then((tripId) => {
-      return Promise.all(tripId.map((trip) => {
-        console.log('DISDATRIPIDDD', trip);
-        return models.Trips.findAll({ where: { id: trip.tripId } });
-      }));
+    .then(tripId => Promise.all(tripId.map((trip) => {
+      console.log('DISDATRIPIDDD', trip);
+      return models.Trips.findAll({ where: { id: trip.tripId } });
+    })))
+    .then((tripArray) => {
+      tripArray.map((trip) => {
+        const currently = new Date();
+        if (trip[0].dataValues.dateStart < currently && trip[0].dataValues.dateEnd > currently) {
+          trip[0].dataValues.status = 'current';
+          console.log(trip[0].dataValues.route);
+        } else if (trip[0].dataValues.dateStart > currently) {
+          trip[0].dataValues.status = 'upcoming';
+          console.log(trip[0].dataValues.route);
+        } else if (trip[0].dataValues.dateEnd < currently) {
+          trip[0].dataValues.status = 'previous';
+          console.log(trip[0].dataValues.route);
+        }
+      });
+      res.send(tripArray);
     })
-    .then((response) => {
-      console.log(response);
-      res.send(response);
-    })
+    // .then((response) => {
+    //   console.log(response);
+    //   res.send(response);
+    // })
     .catch((err) => {
-      console.log('Err trying to get user trips from the database', err);
+      // console.log('Err trying to get user trips from the database', err);
       res.status(400).send(err);
     });
 });
