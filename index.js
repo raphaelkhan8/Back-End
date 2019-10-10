@@ -304,7 +304,7 @@ app.get('/nearbyPlaces', (req, res) => {
     .then((sortedInterestsArr) => {
       Promise.all(getNearbyPlaces(req.query.location, sortedInterestsArr))
         .then((response) => {
-          res.send(response.filter(array => array !== []));
+          res.send(response.filter(array => array.length > 1));
         });
     })
     .catch((err) => {
