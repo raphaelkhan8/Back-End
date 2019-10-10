@@ -272,8 +272,13 @@ app.get('/getAllInterests', (req, res) => {
       }
       const sortedInterestsArray = interestsArr.sort((a, b) => b[1] - a[1]);
       const sortedArray = sortedInterestsArray.filter(interestArr => interestArr[0] !== 'id' && interestArr[0] !== 'userId');
-      const sortedInterestsArr = sortedArray.map(arr => arr[0]).flat();
-      res.send(sortedInterestsArr);
+      return sortedArray.map(arr => arr[0]).flat();
+    })
+    .then((response) => {
+      res.send(response);
+    })
+    .catch((err) => {
+      console.error(err);
     });
 });
 
@@ -322,30 +327,52 @@ app.get('/getLikedAndSavedForLater', (req, res) => {
 
 // GET NEARBY PLACES
 app.get('/nearbyPlaces', (req, res) => {
-  getNearbyPlaces(req.query.location)
-    .then((response) => {
-      // console.log(response)
-      const locations = response.json.results.map((place) => {
-        const responseFields = {
-          name: place.name,
-          placeId: place.place_id,
-          lat: place.geometry.location.lat,
-          lng: place.geometry.location.lng,
-          address: place.vicinity,
-          icon: place.icon,
-          priceLevel: place.price_level,
-          rating: place.rating,
-        };
-        if (place.photos) { responseFields.photos = place.photos[0].photo_reference; }
-        return responseFields;
-      });
-      res.status(200).send(locations.slice(0, 5));
+  models.Users.findAll({ where: { id: req.query.id } })
+    .then((user) => {
+      console.log(user);
+      return models.UserInterests.findAll({ where: { userId: user[0].id } });
+    })
+    .then((interests) => {
+      const interestsObj = interests[0].dataValues;
+      const interestsArr = [];
+      for (const category in interestsObj) {
+        interestsArr.push([category, interestsObj[category]]);
+      }
+      const sortedInterestsArray = interestsArr.sort((a, b) => b[1] - a[1]);
+      const sortedArray = sortedInterestsArray.filter(interestArr => interestArr[0] !== 'id' && interestArr[0] !== 'userId');
+      return sortedArray.map(arr => arr[0]).flat();
+    })
+    .then((sortedInterestsArr) => {
+      getNearbyPlaces(req.query.location, sortedInterestsArr);
     })
     .catch((err) => {
-      console.warn(err);
-      res.status(500).send(err);
+      console.error(err);
     });
 });
+//     .then((response) => {
+//       console.log(response);
+//       const locations = response.json.results.map((place) => {
+//         const responseFields = {
+//           name: place.name,
+//           placeId: place.place_id,
+//           lat: place.geometry.location.lat,
+//           lng: place.geometry.location.lng,
+//           address: place.vicinity,
+//           icon: place.icon,
+//           priceLevel: place.price_level,
+//           rating: place.rating,
+//         };
+//         if (place.photos) { responseFields.photos = place.photos[0].photo_reference; }
+//         return responseFields;
+//       });
+//       res.status(200).send(locations.slice(0, 5));
+//     });
+// })
+// .catch((err) => {
+//   console.warn(err);
+//   res.status(500).send(err);
+// });
+// });
 
 app.get('/routePositions', (req, res) => {
   getPositions(req.query)
