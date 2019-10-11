@@ -333,7 +333,7 @@ app.get('/exploreNearbyPlaces', (req, res) => {
       }
       const sortedInterestsArray = interestsArr.sort((a, b) => b[1] - a[1]);
       const sortedArray = sortedInterestsArray.filter(interestArr => interestArr[0] !== 'id' && interestArr[0] !== 'userId');
-      return sortedArray.map(arr => arr[0]).flat();
+      return sortedArray.map(arr => arr[0]);
     })
     .then((sortedInterestsArr) => {
       Promise.all(getNearbyPlaces(req.query.location, sortedInterestsArr))
