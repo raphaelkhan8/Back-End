@@ -6,9 +6,9 @@ const googleMapsClient = require('@google/maps').createClient({
   Promise,
 });
 
-const decode = (encodedObj) => {
+// const decode = (encodedObj) => {
 
-};
+// };
 
 const getNearbyPlaces = (location, interests) => {
 // lat: 29.96768435314543,
