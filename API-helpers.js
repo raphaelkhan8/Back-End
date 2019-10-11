@@ -11,10 +11,9 @@ const decode = (encodedObj) => {
 };
 
 const getNearbyPlaces = (location, interests) => {
-  // lat: 29.96768435314543,
-  // lng: -90.05025405587452
-
-  return interests.map((interest) => {
+// lat: 29.96768435314543,
+// lng: -90.05025405587452
+  const usersNearbyPlaces = interests.map((interest) => {
     const options = {
       // location: `29.96768435314543,-90.05025405587452`,
       location,
@@ -23,13 +22,6 @@ const getNearbyPlaces = (location, interests) => {
       rankby: 'distance',
     };
     return googleMapsClient.placesNearby(options).asPromise()
-      // .then((nearbyPlaces) => {
-      //   console.log('PLACESSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS', nearbyPlaces);
-      //   return nearbyPlaces;
-      // })
-      // .catch((err) => {
-      //   console.error(err);
-      // });
       .then((response) => {
         console.log(response);
         const locations = response.json.results.map((place) => {
@@ -42,32 +34,22 @@ const getNearbyPlaces = (location, interests) => {
             icon: place.icon,
             priceLevel: place.price_level,
             rating: place.rating,
+            interest: options.keyword,
           };
           if (place.photos) { responseFields.photos = place.photos[0].photo_reference; }
           return responseFields;
         });
-        res.status(200).send(locations.slice(0, 5));
+        return locations;
+        // res.status(200).send(locations.slice(0, 5));
+      })
+      .catch((err) => {
+        console.warn(err);
+        // res.status(500).send(err);
       });
-  })
-    .catch((err) => {
-      console.warn(err);
-      res.status(500).send(err);
-    });
+  });
+  console.log(usersNearbyPlaces);
+  return usersNearbyPlaces;
 };
-  // const options = {
-  //   // location: `29.96768435314543,-90.05025405587452`,
-  //   location,
-  //   keyword: 'coffee',
-  //   opennow: true,
-  //   rankby: 'distance',
-  // };
-  // const test = {
-  //   placeid: 'EisxMyBNYXJrZXQgU3RyZWV0LCBXaWxtaW5ndG9uLCBOQyAyODQwMSwgVVNB',
-  // };
-  // const response = googleMapsClient.placesNearby(options);
-  // console.log(response);
-  // return googleMapsClient.placesNearby(options).asPromise();
-// };
 
 const getPositions = (addresses) => {
   const results = [];
