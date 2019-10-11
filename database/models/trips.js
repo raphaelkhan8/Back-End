@@ -9,11 +9,11 @@ const Trips = db.define('trips', {
   },
   dateStart: {
     type: Sequelize.DATE,
-    allowNull: false,
+    allowNull: true,
   },
   dateEnd: {
     type: Sequelize.DATE,
-    allowNull: false,
+    allowNull: true,
   },
   route: {
     type: Sequelize.STRING,
