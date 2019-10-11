@@ -114,6 +114,8 @@ app.post('/addTrip', (req, res) => {
         where: {
           userId: req.body.userId,
           tripId: tripData.id,
+          dateStart: req.body.dateStart,
+          dateEnd: req.body.dateEnd,
         },
       });
       res.send(tripData);
