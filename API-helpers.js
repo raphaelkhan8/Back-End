@@ -13,7 +13,10 @@ const googleMapsClient = require('@google/maps').createClient({
 const getNearbyPlaces = (location, interests) => {
 // lat: 29.96768435314543,
 // lng: -90.05025405587452
-  const usersNearbyPlaces = interests.map((interest) => {
+  console.log(interests)
+  const newInterests = [interests[6], interests[12]];
+  console.log(newInterests)
+  const usersNearbyPlaces = newInterests.map((interest) => {
     const options = {
       // location: `29.96768435314543,-90.05025405587452`,
       location,

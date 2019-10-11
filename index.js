@@ -307,41 +307,17 @@ app.get('/nearbyPlaces', (req, res) => {
       // sometimes you need to add .flat() to line 344
     })
     .then((sortedInterestsArr) => {
-      Promise.all(getNearbyPlaces(req.query.location, sortedInterestsArr))
-        .then((response) => {
-          res.send(response.filter(array => array.length > 1));
-        });
+      return Promise.all(getNearbyPlaces(req.query.location, sortedInterestsArr))
     })
-    .catch((err) => {
-      console.error(err);
-    });
-});
-
-// GET TOP FIVE NEARBY PLACES
-// this endpoint should hit when the Explore page is rendered
-app.get('/exploreNearbyPlaces', (req, res) => {
-  models.Users.findAll({ where: { id: req.query.id } })
-    .then((user) => {
-      console.log(user);
-      return models.UserInterests.findAll({ where: { userId: user[0].id } });
-    })
-    .then((interests) => {
-      const interestsObj = interests[0].dataValues;
-      const interestsArr = [];
-      for (const category in interestsObj) {
-        interestsArr.push([category, interestsObj[category]]);
-      }
-      const sortedInterestsArray = interestsArr.sort((a, b) => b[1] - a[1]);
-      const sortedArray = sortedInterestsArray.filter(interestArr => interestArr[0] !== 'id' && interestArr[0] !== 'userId');
-      return sortedArray.map(arr => arr[0]);
-    })
-    .then((sortedInterestsArr) => {
-      Promise.all(getNearbyPlaces(req.query.location, sortedInterestsArr))
-        .then((response) => {
-          const noEmptyPlaces = response.filter(array => array.length > 1);
-          const nearestPlacefromEachInterest = noEmptyPlaces.map(array => array[0]);
-          res.send(nearestPlacefromEachInterest.slice(0, 10));
-        });
+    .then((response) => {
+      const filteredRes = [];
+      response.forEach((interestArr) => {
+        for (let i = 0; i < interestArr.length; i++) {
+          if (i > 6) break;
+          filteredRes.push(interestArr[i]);
+        }
+      })
+      res.status(200).send(filteredRes);
     })
     .catch((err) => {
       console.error(err);
