@@ -11,11 +11,11 @@ const googleMapsClient = require('@google/maps').createClient({
 // };
 
 const getNearbyPlaces = (location, interests) => {
-// lat: 29.96768435314543,
-// lng: -90.05025405587452
-  console.log(interests)
+  // lat: 29.96768435314543,
+  // lng: -90.05025405587452
+  console.log(interests);
   const newInterests = [interests[6], interests[12]];
-  console.log(newInterests)
+  console.log(newInterests);
   const usersNearbyPlaces = newInterests.map((interest) => {
     const options = {
       // location: `29.96768435314543,-90.05025405587452`,
@@ -24,7 +24,9 @@ const getNearbyPlaces = (location, interests) => {
       opennow: true,
       rankby: 'distance',
     };
-    return googleMapsClient.placesNearby(options).asPromise()
+    return googleMapsClient
+      .placesNearby(options)
+      .asPromise()
       .then((response) => {
         console.log(response);
         const locations = response.json.results.map((place) => {
@@ -39,7 +41,9 @@ const getNearbyPlaces = (location, interests) => {
             rating: place.rating,
             interest: options.keyword,
           };
-          if (place.photos) { responseFields.photos = place.photos[0].photo_reference; }
+          if (place.photos) {
+            responseFields.photos = place.photos[0].photo_reference;
+          }
           return responseFields;
         });
         return locations;
@@ -56,7 +60,9 @@ const getNearbyPlaces = (location, interests) => {
 
 const getPositions = (addresses) => {
   const results = [];
-  return googleMapsClient.geocode({ address: addresses.origin }).asPromise()
+  return googleMapsClient
+    .geocode({ address: addresses.origin })
+    .asPromise()
     .then((result) => {
       const filteredResult = {
         location: result.json.results[0].geometry.location,
@@ -64,7 +70,9 @@ const getPositions = (addresses) => {
       };
       results.push(filteredResult);
 
-      return googleMapsClient.geocode({ address: addresses.destination }).asPromise();
+      return googleMapsClient
+        .geocode({ address: addresses.destination })
+        .asPromise();
     })
     .then((result) => {
       const filteredResult = {
@@ -84,10 +92,13 @@ const getPlacePhoto = (photoRef) => {
   const options = {
     key: GOOGLE_MAPS_API_KEY,
     photoreference: photoRef.ref,
-    maxwidth: 100,
+    maxheight: 200,
   };
 
-  return axios.get('https://maps.googleapis.com/maps/api/place/photo', { responseType: 'arraybuffer', params: options });
+  return axios.get('https://maps.googleapis.com/maps/api/place/photo', {
+    responseType: 'arraybuffer',
+    params: options,
+  });
 
   // return googleMapsClient.placesPhoto(options).asPromise();
 };
