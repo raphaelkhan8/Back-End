@@ -6,9 +6,9 @@ const googleMapsClient = require('@google/maps').createClient({
   Promise,
 });
 
-const decode = (encodedObj) => {
+// const decode = (encodedObj) => {
 
-};
+// };
 
 const getNearbyPlaces = (location, interests) => {
   // lat: 29.96768435314543,
@@ -23,13 +23,6 @@ const getNearbyPlaces = (location, interests) => {
       rankby: 'distance',
     };
     return googleMapsClient.placesNearby(options).asPromise()
-      // .then((nearbyPlaces) => {
-      //   console.log('PLACESSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS', nearbyPlaces);
-      //   return nearbyPlaces;
-      // })
-      // .catch((err) => {
-      //   console.error(err);
-      // });
       .then((response) => {
         console.log(response);
         const locations = response.json.results.map((place) => {
