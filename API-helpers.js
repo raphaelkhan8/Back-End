@@ -6,24 +6,52 @@ const googleMapsClient = require('@google/maps').createClient({
   Promise,
 });
 
-const decode = (encodedObj) => {
+// const decode = (encodedObj) => {
 
-};
-const getNearbyPlaces = (location) => {
-  // lat: 29.96768435314543,
-  // lng: -90.05025405587452
+// };
 
-  const options = {
-    // location: `29.96768435314543,-90.05025405587452`,
-    location,
-    keyword: 'coffee',
-    opennow: true,
-    rankby: 'distance',
-  };
-  const test = {
-    placeid: 'EisxMyBNYXJrZXQgU3RyZWV0LCBXaWxtaW5ndG9uLCBOQyAyODQwMSwgVVNB',
-  };
-  return googleMapsClient.placesNearby(options).asPromise();
+const getNearbyPlaces = (location, interests) => {
+// lat: 29.96768435314543,
+// lng: -90.05025405587452
+  console.log(interests)
+  const newInterests = [interests[6], interests[12]];
+  console.log(newInterests)
+  const usersNearbyPlaces = newInterests.map((interest) => {
+    const options = {
+      // location: `29.96768435314543,-90.05025405587452`,
+      location,
+      keyword: `${interest}`,
+      opennow: true,
+      rankby: 'distance',
+    };
+    return googleMapsClient.placesNearby(options).asPromise()
+      .then((response) => {
+        console.log(response);
+        const locations = response.json.results.map((place) => {
+          const responseFields = {
+            name: place.name,
+            placeId: place.place_id,
+            lat: place.geometry.location.lat,
+            lng: place.geometry.location.lng,
+            address: place.vicinity,
+            icon: place.icon,
+            priceLevel: place.price_level,
+            rating: place.rating,
+            interest: options.keyword,
+          };
+          if (place.photos) { responseFields.photos = place.photos[0].photo_reference; }
+          return responseFields;
+        });
+        return locations;
+        // res.status(200).send(locations.slice(0, 5));
+      })
+      .catch((err) => {
+        console.warn(err);
+        // res.status(500).send(err);
+      });
+  });
+  console.log(usersNearbyPlaces);
+  return usersNearbyPlaces;
 };
 
 const getPositions = (addresses) => {
@@ -57,7 +85,7 @@ const getPlacePhoto = (photoRef) => {
     key: GOOGLE_MAPS_API_KEY,
     photoreference: photoRef.ref,
     maxwidth: 100,
-  }
+  };
 
   return axios.get('https://maps.googleapis.com/maps/api/place/photo', { responseType: 'arraybuffer', params: options });
 
@@ -67,14 +95,14 @@ const getPlacePhoto = (photoRef) => {
 const getAutocompleteAddress = (query) => {
   const options = {
     input: query.input,
-    components:{ country: 'us'}, 
-  }
-  if(query.location.length) { 
+    components: { country: 'us' },
+  };
+  if (query.location.length) {
     options.location = query.location;
     options.radius = 10000;
   }
   return googleMapsClient.placesAutoComplete(options).asPromise();
-}
+};
 
 module.exports.getAutocompleteAddress = getAutocompleteAddress;
 module.exports.getPositions = getPositions;

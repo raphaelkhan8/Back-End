@@ -6,12 +6,12 @@ const passport = require('passport');
 const session = require('express-session');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const { db, models } = require('./database');
-const { 
+const {
   getNearbyPlaces,
   getPositions,
   getPlacePhoto,
   getAutocompleteAddress,
- } = require('./API-helpers');
+} = require('./API-helpers');
 
 
 const {
@@ -32,6 +32,7 @@ app.use(session({
 }));
 app.use(passport.initialize());
 app.use(passport.session());
+
 
 //* ****************************
 // GOOGLE SIGN IN
@@ -61,6 +62,7 @@ passport.deserializeUser((id, done) => {
     done(err, user);
   });
 });
+
 
 //* ****************************
 // CORS HEADERS
@@ -112,6 +114,8 @@ app.post('/addTrip', (req, res) => {
         where: {
           userId: req.body.userId,
           tripId: tripData.id,
+          dateStart: req.body.dateStart,
+          dateEnd: req.body.dateEnd,
         },
       });
       res.send(tripData);
@@ -121,6 +125,7 @@ app.post('/addTrip', (req, res) => {
       res.status(400).send(err);
     });
 });
+
 // remove a trip from the database
 app.post('/removeTrip', (req, res) => {
   console.log('REQBODDY', req.body);
@@ -151,13 +156,13 @@ app.get('/getAllUsersTrips', (req, res) => {
       console.log(user);
       return models.UserTrips.findAll({ where: { userId: user[0].id } });
     })
-    .then((tripId) => {
-      console.log(`DISDATRIPIDDD${tripId}`);
-      return models.Trips.findAll({ where: { id: tripId[0].id } });
-    })
+    .then(tripId => Promise.all(tripId.map((trip) => {
+      console.log('DISDATRIPIDDD', trip);
+      return models.Trips.findAll({ where: { id: trip.tripId } });
+    })))
     .then((response) => {
-      console.log(response[0]);
-      res.send(response[0]);
+      console.log(response);
+      res.send(response);
     })
     .catch((err) => {
       console.log('Err trying to get user trips from the database', err);
@@ -180,6 +185,7 @@ app.get('/getAllUsersTrips', (req, res) => {
 // app.get('/getStats', (req, res) => {
 
 // });
+
 
 //* ****************************
 // INTERESTS
@@ -217,6 +223,7 @@ app.post('/dislikedInterest', (req, res) => {
       console.error(err);
     });
 });
+
 // deletes interest
 app.post('/deleteInterest', (req, res) => {
   // const field = req.body.interest;
@@ -235,29 +242,11 @@ app.post('/deleteInterest', (req, res) => {
     });
 });
 
-// get user's top five interests
-app.get('/getTopFiveInterests', (req, res) => {
-  models.Users.findAll({ where: { id: req.query.id } })
-    .then((user) => {
-      console.log(user);
-      return models.UserInterests.findAll({ where: { userId: user[0].id } });
-    })
-    .then((tripId) => {
-      console.log(`DISDATRIPIDDD${tripId}`);
-      return models.Trips.findAll({ where: { id: tripId[0].id } });
-    })
-    .then((response) => {
-      console.log(response[0]);
-      res.send(response[0]);
-    })
-    .catch((err) => {
-      console.log('Err trying to get user trips from the database', err);
-      res.status(400).send(err);
-    });
-});
+
 //* ****************************
 // YOUR PLACES
 //* ****************************
+
 //  POST /saveForLater
 // when something is saved for later - save to places
 // under user places set status to 'saved'
@@ -290,35 +279,48 @@ app.get('/getLikedAndSavedForLater', (req, res) => {
       res.status(400).send(err);
     });
 });
+
+
 //* ****************************
 // VISTITED PLACES
 //* ****************************
 
-// GET NEARBY PLACES
-
+// GET ALL NEARBY PLACES
+// this endpoint should hit when SHOW ALL RESULTS button is clicked in the Explore page
+// returns an array of arrays where each array contains a bunch of objects: [[{}, {}, ...], [{}, {},...], ...]
+// each inner array represets an interest while each object is a nearby place
 app.get('/nearbyPlaces', (req, res) => {
-  getNearbyPlaces(req.query.location)
+  models.Users.findAll({ where: { id: req.query.id } })
+    .then((user) => {
+      console.log(user);
+      return models.UserInterests.findAll({ where: { userId: user[0].id } });
+    })
+    .then((interests) => {
+      const interestsObj = interests[0].dataValues;
+      const interestsArr = [];
+      for (const category in interestsObj) {
+        interestsArr.push([category, interestsObj[category]]);
+      }
+      const sortedInterestsArray = interestsArr.sort((a, b) => b[1] - a[1]);
+      const sortedArray = sortedInterestsArray.filter(interestArr => interestArr[0] !== 'id' && interestArr[0] !== 'userId');
+      return sortedArray.map(arr => arr[0]);
+      // sometimes you need to add .flat() to line 344
+    })
+    .then((sortedInterestsArr) => {
+      return Promise.all(getNearbyPlaces(req.query.location, sortedInterestsArr))
+    })
     .then((response) => {
-      console.log(response)
-      const locations = response.json.results.map((place) => {
-        const responseFields = {
-          name: place.name,
-          placeId: place.place_id,
-          lat: place.geometry.location.lat,
-          lng: place.geometry.location.lng,
-          address: place.vicinity,
-          icon: place.icon,
-          priceLevel: place.price_level,
-          rating: place.rating,
-        };
-        if (place.photos) { responseFields.photos = place.photos[0].photo_reference; }
-        return responseFields;
-      });
-      res.status(200).send(locations.slice(0, 5));
+      const filteredRes = [];
+      response.forEach((interestArr) => {
+        for (let i = 0; i < interestArr.length; i++) {
+          if (i > 6) break;
+          filteredRes.push(interestArr[i]);
+        }
+      })
+      res.status(200).send(filteredRes);
     })
     .catch((err) => {
-      console.warn(err);
-      res.status(500).send(err);
+      console.error(err);
     });
 });
 
@@ -342,10 +344,10 @@ app.get('/placePhoto', (req, res) => {
 });
 
 
-  app.get('/autocompleteAddress', (req, res) => {
-    getAutocompleteAddress(req.query)
-    .then(suggestion => {
-      console.log(suggestion)
+app.get('/autocompleteAddress', (req, res) => {
+  getAutocompleteAddress(req.query)
+    .then((suggestion) => {
+      console.log(suggestion);
       const filterSuggestions = suggestion.json.predictions.map(place => place.description);
       res.status(200).send(filterSuggestions);
     })
