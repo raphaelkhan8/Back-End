@@ -299,7 +299,7 @@ app.get('/getLikedAndSavedForLater', (req, res) => {
 app.get('/nearbyPlaces', (req, res) => {
   getNearbyPlaces(req.query.location)
     .then((response) => {
-      // console.log(response)
+      console.log(response)
       const locations = response.json.results.map((place) => {
         const responseFields = {
           name: place.name,
