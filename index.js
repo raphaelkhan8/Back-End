@@ -114,8 +114,6 @@ app.post('/addTrip', (req, res) => {
         where: {
           userId: req.body.userId,
           tripId: tripData.id,
-          dateStart: req.body.dateStart,
-          dateEnd: req.body.dateEnd,
         },
       });
       res.send(tripData);
@@ -316,7 +314,7 @@ app.get('/nearbyPlaces', (req, res) => {
           if (i > 6) break;
           filteredRes.push(interestArr[i]);
         }
-      })
+      });
       res.status(200).send(filteredRes);
     })
     .catch((err) => {
