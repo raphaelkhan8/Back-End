@@ -152,6 +152,7 @@ app.post('/removeTrip', (req, res) => {
 
 // gets all users past, current, and previous trips
 // gets all users past, current, and previous trips
+// gets all users past, current, and previous trips
 app.get('/getAllUsersTrips', (req, res) => {
   console.log('req.parammmmm', req.query);
   models.Users.findAll({ where: { id: req.query.id } })
@@ -176,7 +177,6 @@ app.get('/getAllUsersTrips', (req, res) => {
           trip[0].dataValues.status = 'previous';
           console.log(trip[0].dataValues.route);
         }
-        console.log('youre on this trip');
       });
       res.send(tripArray);
     })
