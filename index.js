@@ -328,10 +328,19 @@ app.get('/routePositions', (req, res) => {
   getPositions(req.query)
     .then((coords) => {
       console.log(coords)
-      const filtered = coords.map(location => {
+      const filtered = coords.map((location, index) => {
+        if (index < 2) {
+          return {
+            lat: location.value.json.results[0].geometry.location.lat,
+            lng: location.value.json.results[0].geometry.location.lng,
+            placeId: location.value.json.results[0].place_id || 'no id'
+          }
+        }
         return {
-          lat: location.value.json.results[0].geometry.location.lat,
-          lng: location.value.json.results[0].geometry.location.lng,
+          location: {
+            lat: location.value.json.results[0].geometry.location.lat,
+            lng: location.value.json.results[0].geometry.location.lng,
+          },
           placeId: location.value.json.results[0].place_id || 'no id'
         }
         
