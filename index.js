@@ -327,8 +327,17 @@ app.get('/nearbyPlaces', (req, res) => {
 app.get('/routePositions', (req, res) => {
   getPositions(req.query)
     .then((coords) => {
-      // console.log(coords)
-      res.status(200).send(coords);
+      console.log(coords)
+      const filtered = coords.map(location => {
+        return {
+          lat: location.value.json.results[0].geometry.location.lat,
+          lng: location.value.json.results[0].geometry.location.lng,
+          placeId: location.value.json.results[0].place_id || 'no id'
+        }
+        
+      })
+      console.log(filtered)
+      res.status(200).send(filtered);
     })
     .catch(err => console.error(err));
 });

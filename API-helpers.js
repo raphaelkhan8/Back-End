@@ -21,7 +21,7 @@ const getNearbyPlaces = (location, interests) => {
       // location: `29.96768435314543,-90.05025405587452`,
       location,
       keyword: `${interest}`,
-      opennow: true,
+      opennow: false,
       rankby: 'distance',
     };
     return googleMapsClient.placesNearby(options).asPromise()
@@ -55,36 +55,23 @@ const getNearbyPlaces = (location, interests) => {
 };
 
 const getPositions = (addresses) => {
-  const results = [];
-  return googleMapsClient.geocode({ address: addresses.origin }).asPromise()
-    .then((result) => {
-      const filteredResult = {
-        location: result.json.results[0].geometry.location,
-        placeId: result.json.results[0].place_id,
-      };
-      results.push(filteredResult);
+  const allPromises = [];
+  allPromises.push(googleMapsClient.geocode({ address: addresses.origin }).asPromise());
+  allPromises.push(googleMapsClient.geocode({ address: addresses.destination }).asPromise());
 
-      return googleMapsClient.geocode({ address: addresses.destination }).asPromise();
-    })
-    .then((result) => {
-      const filteredResult = {
-        location: result.json.results[0].geometry.location,
-        placeId: result.json.results[0].place_id,
-      };
-      results.push(filteredResult);
-
-      return new Promise((resolve, reject) => {
-        resolve(results);
-        reject(result);
-      });
-    });
+  if (!!addresses.waypoints) {
+    const waypoints = addresses.waypoints.split(';')
+    waypoints.filter(waypoint => !!waypoint).forEach(waypoint => allPromises.push(googleMapsClient.geocode({ address: waypoint }).asPromise()));   
+  }
+  return Promise.allSettled(allPromises);
+      
 };
 
 const getPlacePhoto = (photoRef) => {
   const options = {
     key: GOOGLE_MAPS_API_KEY,
     photoreference: photoRef.ref,
-    maxwidth: 100,
+    maxheight: 200,
   };
 
   return axios.get('https://maps.googleapis.com/maps/api/place/photo', { responseType: 'arraybuffer', params: options });
