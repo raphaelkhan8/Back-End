@@ -105,7 +105,11 @@ app.get('/auth/google/callback',
 app.post('/addTrip', (req, res) => {
   console.log('req.bodyyyy', req.body);
   return models.Trips.findOrCreate({
-    where: { route: req.body.route },
+    where: {
+      route: req.body.route,
+      dateStart: req.body.dateStart,
+      dateEnd: req.body.dateEnd,
+    },
   })
     .then((trip) => {
       const tripData = trip[0].dataValues;
@@ -304,9 +308,7 @@ app.get('/nearbyPlaces', (req, res) => {
       return sortedArray.map(arr => arr[0]);
       // sometimes you need to add .flat() to line 344
     })
-    .then((sortedInterestsArr) => {
-      return Promise.all(getNearbyPlaces(req.query.location, sortedInterestsArr))
-    })
+    .then((sortedInterestsArr) => Promise.all(getNearbyPlaces(req.query.location, sortedInterestsArr)))
     .then((response) => {
       const filteredRes = [];
       response.forEach((interestArr) => {
