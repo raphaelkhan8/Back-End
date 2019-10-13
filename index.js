@@ -222,6 +222,9 @@ app.post('/likedInterest', (req, res) => {
           status: 'liked',
         },
       });
+    })
+    .catch((err) => {
+      console.error(err);
     });
 });
 
