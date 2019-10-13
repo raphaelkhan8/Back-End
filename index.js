@@ -340,8 +340,8 @@ app.get('/routePositions', (req, res) => {
           location: {
             lat: location.value.json.results[0].geometry.location.lat,
             lng: location.value.json.results[0].geometry.location.lng,
-          },
-          placeId: location.value.json.results[0].place_id || 'no id'
+            placeId: location.value.json.results[0].place_id || 'no id'
+          }
         }
         
       })
