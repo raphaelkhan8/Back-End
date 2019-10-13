@@ -151,6 +151,7 @@ app.post('/removeTrip', (req, res) => {
 });
 
 // gets all users past, current, and previous trips
+// gets all users past, current, and previous trips
 app.get('/getAllUsersTrips', (req, res) => {
   console.log('req.parammmmm', req.query);
   models.Users.findAll({ where: { id: req.query.id } })
@@ -162,15 +163,28 @@ app.get('/getAllUsersTrips', (req, res) => {
       console.log('DISDATRIPIDDD', trip);
       return models.Trips.findAll({ where: { id: trip.tripId } });
     })))
-    .then((response) => {
-      console.log(response);
-      res.send(response);
+    .then((tripArray) => {
+      tripArray.map((trip) => {
+        const currently = new Date();
+        if (trip[0].dataValues.dateStart < currently && trip[0].dataValues.dateEnd > currently) {
+          trip[0].dataValues.status = 'current';
+          console.log(trip[0].dataValues.route);
+        } else if (trip[0].dataValues.dateStart > currently) {
+          trip[0].dataValues.status = 'upcoming';
+          console.log(trip[0].dataValues.route);
+        } else if (trip[0].dataValues.dateEnd < currently) {
+          trip[0].dataValues.status = 'previous';
+          console.log(trip[0].dataValues.route);
+        }
+        console.log('youre on this trip');
+      });
+      res.send(tripArray);
     })
     .catch((err) => {
-      console.log('Err trying to get user trips from the database', err);
       res.status(400).send(err);
     });
 });
+
 
 //* ****************************
 // CITIES
