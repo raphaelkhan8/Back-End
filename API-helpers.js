@@ -18,9 +18,9 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
   console.log(interests);
   let newInterests;
   if (snapshotUrl === '/results') {
-    newInterests = interests;
+    newInterests = interests.slice(0, 5);
   } else {
-    newInterests = [interests[6], interests[12]];
+    newInterests = [interests[0], interests[1]];
   }
   console.log(newInterests);
   const usersNearbyPlaces = newInterests.map((interest) => {
