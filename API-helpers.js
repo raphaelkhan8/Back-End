@@ -66,7 +66,6 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
 };
 
 const getPositions = (addresses) => {
-<<<<<<< HEAD
   const allPromises = [];
   allPromises.push(googleMapsClient.geocode({ address: addresses.origin }).asPromise());
   allPromises.push(googleMapsClient.geocode({ address: addresses.destination }).asPromise());
@@ -77,35 +76,6 @@ const getPositions = (addresses) => {
   }
   return Promise.allSettled(allPromises);
       
-=======
-  const results = [];
-  return googleMapsClient
-    .geocode({ address: addresses.origin })
-    .asPromise()
-    .then((result) => {
-      const filteredResult = {
-        location: result.json.results[0].geometry.location,
-        // placeId: result.json.results[0].place_id,
-      };
-      results.push(filteredResult);
-
-      return googleMapsClient
-        .geocode({ address: addresses.destination })
-        .asPromise();
-    })
-    .then((result) => {
-      const filteredResult = {
-        location: result.json.results[0].geometry.location,
-        // placeId: result.json.results[0].place_id,
-      };
-      results.push(filteredResult);
-
-      return new Promise((resolve, reject) => {
-        resolve(results);
-        reject(result);
-      });
-    });
->>>>>>> 2dc83815a4c164caa3d19299724671c7001bd47c
 };
 
 const getPlacePhoto = (photoRef) => {
