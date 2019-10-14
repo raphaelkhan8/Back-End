@@ -73,7 +73,7 @@ const getPositions = (addresses) => {
     .then((result) => {
       const filteredResult = {
         location: result.json.results[0].geometry.location,
-        placeId: result.json.results[0].place_id,
+        // placeId: result.json.results[0].place_id,
       };
       results.push(filteredResult);
 
@@ -84,7 +84,7 @@ const getPositions = (addresses) => {
     .then((result) => {
       const filteredResult = {
         location: result.json.results[0].geometry.location,
-        placeId: result.json.results[0].place_id,
+        // placeId: result.json.results[0].place_id,
       };
       results.push(filteredResult);
 
