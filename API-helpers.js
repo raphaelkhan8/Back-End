@@ -10,11 +10,18 @@ const googleMapsClient = require('@google/maps').createClient({
 
 // };
 
-const getNearbyPlaces = (location, interests) => {
+const getNearbyPlaces = (location, interests, snapshotUrl) => {
   // lat: 29.96768435314543,
   // lng: -90.05025405587452
+  console.log(snapshotUrl);
+  console.log(location);
   console.log(interests);
-  const newInterests = [interests[6], interests[12]];
+  let newInterests;
+  if (snapshotUrl === '/results') {
+    newInterests = interests.slice(0, 5);
+  } else {
+    newInterests = [interests[0], interests[1]];
+  }
   console.log(newInterests);
   const usersNearbyPlaces = newInterests.map((interest) => {
     const options = {
@@ -66,7 +73,7 @@ const getPositions = (addresses) => {
     .then((result) => {
       const filteredResult = {
         location: result.json.results[0].geometry.location,
-        placeId: result.json.results[0].place_id,
+        // placeId: result.json.results[0].place_id,
       };
       results.push(filteredResult);
 
@@ -77,7 +84,7 @@ const getPositions = (addresses) => {
     .then((result) => {
       const filteredResult = {
         location: result.json.results[0].geometry.location,
-        placeId: result.json.results[0].place_id,
+        // placeId: result.json.results[0].place_id,
       };
       results.push(filteredResult);
 
