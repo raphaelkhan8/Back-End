@@ -122,10 +122,17 @@ const getAutocompleteAddress = (query) => {
   return googleMapsClient.placesAutoComplete(options).asPromise();
 };
 
+const getDistanceMatrix = (query) => {
+  console.log(query);
+  const { destination, origin } = query;
+  return axios.get(`https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=${origin}&destinations=${destination}&key=${GOOGLE_MAPS_API_KEY}`);
+};
+
 module.exports.getAutocompleteAddress = getAutocompleteAddress;
 module.exports.getPositions = getPositions;
 module.exports.getNearbyPlaces = getNearbyPlaces;
 module.exports.getPlacePhoto = getPlacePhoto;
+module.exports.getDistanceMatrix = getDistanceMatrix;
 
 // const throttle = function(callback, limit) {
 //   var wait = false;                  // Initially, we're not waiting
