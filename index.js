@@ -12,6 +12,7 @@ const {
   getPositions,
   getPlacePhoto,
   getAutocompleteAddress,
+  getDistanceMatrix,
 } = require('./API-helpers');
 
 
@@ -418,6 +419,14 @@ app.get('/autocompleteAddress', (req, res) => {
     .catch(err => console.error(err));
 });
 
+app.get('/getDistanceMatrix', (req, res) => {
+  // getDistanceMatrix(req);
+  return getDistanceMatrix(req.query)
+    .then((response) => {
+      res.send(response.data.rows[0].elements[0]);
+    })
+    .catch(error => console.log(error));
+});
 
 const PORT = 4201;
 app.listen(PORT, () => {
