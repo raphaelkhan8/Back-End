@@ -31,7 +31,8 @@
     "passport-oauth": "^1.0.0",
     "pg": "^7.12.1",
     "pg-hstore": "^2.3.3",
-    "sequelize": "^5.19.2"
+    "sequelize": "^5.19.2",
+    "underscore": "^1.9.1"
   },
   "devDependencies": {
     "eslint": "^5.16.0",
