@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const _ = require('underscore');
 const passport = require('passport');
 const session = require('express-session');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
@@ -105,7 +106,11 @@ app.get('/auth/google/callback',
 app.post('/addTrip', (req, res) => {
   console.log('req.bodyyyy', req.body);
   return models.Trips.findOrCreate({
-    where: { route: req.body.route },
+    where: {
+      route: req.body.route,
+      dateStart: req.body.dateStart,
+      dateEnd: req.body.dateEnd,
+    },
   })
     .then((trip) => {
       const tripData = trip[0].dataValues;
@@ -114,8 +119,6 @@ app.post('/addTrip', (req, res) => {
         where: {
           userId: req.body.userId,
           tripId: tripData.id,
-          dateStart: req.body.dateStart,
-          dateEnd: req.body.dateEnd,
         },
       });
       res.send(tripData);
@@ -149,6 +152,7 @@ app.post('/removeTrip', (req, res) => {
 });
 
 // gets all users past, current, and previous trips
+// gets all users past, current, and previous trips
 app.get('/getAllUsersTrips', (req, res) => {
   console.log('req.parammmmm', req.query);
   models.Users.findAll({ where: { id: req.query.id } })
@@ -160,15 +164,28 @@ app.get('/getAllUsersTrips', (req, res) => {
       console.log('DISDATRIPIDDD', trip);
       return models.Trips.findAll({ where: { id: trip.tripId } });
     })))
-    .then((response) => {
-      console.log(response);
-      res.send(response);
+    .then((tripArray) => {
+      tripArray.map((trip) => {
+        const currently = new Date();
+        if (trip[0].dataValues.dateStart < currently && trip[0].dataValues.dateEnd > currently) {
+          trip[0].dataValues.status = 'current';
+          console.log(trip[0].dataValues.route);
+        } else if (trip[0].dataValues.dateStart > currently) {
+          trip[0].dataValues.status = 'upcoming';
+          console.log(trip[0].dataValues.route);
+        } else if (trip[0].dataValues.dateEnd < currently) {
+          trip[0].dataValues.status = 'previous';
+          console.log(trip[0].dataValues.route);
+        }
+        console.log('youre on this trip');
+      });
+      res.send(tripArray);
     })
     .catch((err) => {
-      console.log('Err trying to get user trips from the database', err);
       res.status(400).send(err);
     });
 });
+
 
 //* ****************************
 // CITIES
@@ -182,9 +199,49 @@ app.get('/getAllUsersTrips', (req, res) => {
 // STATS
 //* ****************************
 
-// app.get('/getStats', (req, res) => {
-
-// });
+app.get('/getStats', (req, res) => {
+  const statsObj = {};
+  statsObj.cities = [];
+  statsObj.numberOfCities = 0;
+  const currently = new Date();
+  models.Users.findAll({ where: { id: req.query.id } })
+    .then((user) => {
+      console.log(user);
+      return models.UserTrips.findAll({ where: { userId: user[0].id } });
+    })
+    .then(tripId => Promise.all(tripId.map(trip => models.Trips.findAll({ where: { id: trip.tripId } }))))
+    .then((tripArray) => {
+      console.log(tripArray);
+      const previousTrips = tripArray.filter(trip => trip[0].dataValues.dateEnd < currently);
+      console.log(previousTrips);
+      previousTrips.forEach((prevTrip) => {
+        const citiesArr = prevTrip[0].route.split(' -> ');
+        statsObj.cities.push(citiesArr);
+      });
+      statsObj.cities = _.uniq(statsObj.cities.flat());
+      statsObj.numberOfCities = statsObj.cities.length;
+      statsObj.numberOfTrips = previousTrips.length;
+      console.log('STATS', statsObj);
+    })
+    .then(() => models.UserInterests.findAll({ where: { userId: req.query.id } }))
+    .then((interests) => {
+      const interestsObj = interests[0].dataValues;
+      const interestsArr = [];
+      for (const category in interestsObj) {
+        interestsArr.push([category, interestsObj[category]]);
+      }
+      const sortedInterestsArray = interestsArr.sort((a, b) => b[1] - a[1]);
+      const sortedArray = sortedInterestsArray.filter(interestArr => interestArr[0] !== 'id' && interestArr[0] !== 'userId');
+      statsObj.top5Interests = sortedArray.map(arr => arr[0]).slice(0, 5);
+      // sometimes you need to add .flat() to line 237
+    })
+    .then(() => {
+      res.send(statsObj);
+    })
+    .catch((err) => {
+      res.status(400).send(err);
+    });
+});
 
 
 //* ****************************
@@ -206,6 +263,9 @@ app.post('/likedInterest', (req, res) => {
           status: 'liked',
         },
       });
+    })
+    .catch((err) => {
+      console.error(err);
     });
 });
 
@@ -293,7 +353,7 @@ app.get('/nearbyPlaces', (req, res) => {
   models.Users.findAll({ where: { id: req.query.id } })
     .then((user) => {
       console.log(user);
-      return models.UserInterests.findAll({ where: { userId: user[0].id } });
+      return models.UserInterests.findOrCreate({ where: { userId: user[0].id } });
     })
     .then((interests) => {
       const interestsObj = interests[0].dataValues;
@@ -306,17 +366,21 @@ app.get('/nearbyPlaces', (req, res) => {
       return sortedArray.map(arr => arr[0]);
       // sometimes you need to add .flat() to line 344
     })
-    .then((sortedInterestsArr) => {
-      return Promise.all(getNearbyPlaces(req.query.location, sortedInterestsArr))
-    })
+    .then(sortedInterestsArr => Promise.all(getNearbyPlaces(req.query.location, sortedInterestsArr, req.query.snapshotUrl)))
     .then((response) => {
-      const filteredRes = [];
-      response.forEach((interestArr) => {
-        for (let i = 0; i < interestArr.length; i++) {
-          if (i > 6) break;
-          filteredRes.push(interestArr[i]);
-        }
-      })
+      let filteredRes = [];
+      if (req.query.snapshotUrl === '/results') {
+        const filteredArr = response.filter(arr => arr.length > 1);
+        filteredRes = filteredArr;
+      } else {
+        response.forEach((interestArr) => {
+          for (let i = 0; i < interestArr.length; i++) {
+            if (i > 6) break;
+            filteredRes.push(interestArr[i]);
+          }
+        });
+      }
+      console.log(filteredRes);
       res.status(200).send(filteredRes);
     })
     .catch((err) => {

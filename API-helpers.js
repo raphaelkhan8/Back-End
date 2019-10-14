@@ -10,12 +10,19 @@ const googleMapsClient = require('@google/maps').createClient({
 
 // };
 
-const getNearbyPlaces = (location, interests) => {
-// lat: 29.96768435314543,
-// lng: -90.05025405587452
-  console.log(interests)
-  const newInterests = [interests[6], interests[12]];
-  console.log(newInterests)
+const getNearbyPlaces = (location, interests, snapshotUrl) => {
+  // lat: 29.96768435314543,
+  // lng: -90.05025405587452
+  console.log(snapshotUrl);
+  console.log(location);
+  console.log(interests);
+  let newInterests;
+  if (snapshotUrl === '/results') {
+    newInterests = interests.slice(0, 5);
+  } else {
+    newInterests = [interests[0], interests[1]];
+  }
+  console.log(newInterests);
   const usersNearbyPlaces = newInterests.map((interest) => {
     const options = {
       // location: `29.96768435314543,-90.05025405587452`,
@@ -24,7 +31,9 @@ const getNearbyPlaces = (location, interests) => {
       opennow: false,
       rankby: 'distance',
     };
-    return googleMapsClient.placesNearby(options).asPromise()
+    return googleMapsClient
+      .placesNearby(options)
+      .asPromise()
       .then((response) => {
         console.log(response);
         const locations = response.json.results.map((place) => {
@@ -39,7 +48,9 @@ const getNearbyPlaces = (location, interests) => {
             rating: place.rating,
             interest: options.keyword,
           };
-          if (place.photos) { responseFields.photos = place.photos[0].photo_reference; }
+          if (place.photos) {
+            responseFields.photos = place.photos[0].photo_reference;
+          }
           return responseFields;
         });
         return locations;
@@ -55,6 +66,7 @@ const getNearbyPlaces = (location, interests) => {
 };
 
 const getPositions = (addresses) => {
+<<<<<<< HEAD
   const allPromises = [];
   allPromises.push(googleMapsClient.geocode({ address: addresses.origin }).asPromise());
   allPromises.push(googleMapsClient.geocode({ address: addresses.destination }).asPromise());
@@ -65,6 +77,35 @@ const getPositions = (addresses) => {
   }
   return Promise.allSettled(allPromises);
       
+=======
+  const results = [];
+  return googleMapsClient
+    .geocode({ address: addresses.origin })
+    .asPromise()
+    .then((result) => {
+      const filteredResult = {
+        location: result.json.results[0].geometry.location,
+        // placeId: result.json.results[0].place_id,
+      };
+      results.push(filteredResult);
+
+      return googleMapsClient
+        .geocode({ address: addresses.destination })
+        .asPromise();
+    })
+    .then((result) => {
+      const filteredResult = {
+        location: result.json.results[0].geometry.location,
+        // placeId: result.json.results[0].place_id,
+      };
+      results.push(filteredResult);
+
+      return new Promise((resolve, reject) => {
+        resolve(results);
+        reject(result);
+      });
+    });
+>>>>>>> 2dc83815a4c164caa3d19299724671c7001bd47c
 };
 
 const getPlacePhoto = (photoRef) => {
@@ -74,7 +115,10 @@ const getPlacePhoto = (photoRef) => {
     maxheight: 200,
   };
 
-  return axios.get('https://maps.googleapis.com/maps/api/place/photo', { responseType: 'arraybuffer', params: options });
+  return axios.get('https://maps.googleapis.com/maps/api/place/photo', {
+    responseType: 'arraybuffer',
+    params: options,
+  });
 
   // return googleMapsClient.placesPhoto(options).asPromise();
 };
