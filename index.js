@@ -329,10 +329,10 @@ app.post('/saveForLater', (req, res) => {
 });
 
 
-//  GET /getLikedAndSavedForLater
+//  GET a user's places for Places page
 app.get('/getLikedAndSavedForLater', (req, res) => {
   console.log('req.parammmmm', req.query);
-  models.Places.findAll({ where: { userId: req.query.userId } })
+  models.Places.findAll({ where: { userId: req.query.id } })
     .then((response) => {
       console.log(response);
       res.send(response);
