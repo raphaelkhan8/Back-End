@@ -322,15 +322,21 @@ app.get('/nearbyPlaces', (req, res) => {
       return sortedArray.map(arr => arr[0]);
       // sometimes you need to add .flat() to line 344
     })
-    .then((sortedInterestsArr) => Promise.all(getNearbyPlaces(req.query.location, sortedInterestsArr)))
+    .then(sortedInterestsArr => Promise.all(getNearbyPlaces(req.query.location, sortedInterestsArr, req.query.snapshotUrl)))
     .then((response) => {
-      const filteredRes = [];
-      response.forEach((interestArr) => {
-        for (let i = 0; i < interestArr.length; i++) {
-          if (i > 6) break;
-          filteredRes.push(interestArr[i]);
-        }
-      });
+      let filteredRes = [];
+      if (req.query.snapshotUrl === '/results') {
+        const filteredArr = response.filter(arr => arr.length > 1);
+        filteredRes = filteredArr;
+      } else {
+        response.forEach((interestArr) => {
+          for (let i = 0; i < interestArr.length; i++) {
+            if (i > 6) break;
+            filteredRes.push(interestArr[i]);
+          }
+        });
+      }
+      console.log(filteredRes);
       res.status(200).send(filteredRes);
     })
     .catch((err) => {
