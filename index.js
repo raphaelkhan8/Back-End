@@ -12,6 +12,7 @@ const {
   getPositions,
   getPlacePhoto,
   getAutocompleteAddress,
+  getYelpPhotos
 } = require('./API-helpers');
 
 
@@ -397,8 +398,26 @@ app.get('/nearbyPlaces', (req, res) => {
 app.get('/routePositions', (req, res) => {
   getPositions(req.query)
     .then((coords) => {
-      // console.log(coords)
-      res.status(200).send(coords);
+      console.log(coords)
+      const filtered = coords.map((location, index) => {
+        if (index < 2) {
+          return {
+            lat: location.value.json.results[0].geometry.location.lat,
+            lng: location.value.json.results[0].geometry.location.lng,
+            placeId: location.value.json.results[0].place_id || 'no id'
+          }
+        }
+        return {
+          location: {
+            lat: location.value.json.results[0].geometry.location.lat,
+            lng: location.value.json.results[0].geometry.location.lng,
+            placeId: location.value.json.results[0].place_id || 'no id'
+          }
+        }
+        
+      })
+      console.log(filtered)
+      res.status(200).send(filtered);
     })
     .catch(err => console.error(err));
 });
@@ -424,6 +443,19 @@ app.get('/autocompleteAddress', (req, res) => {
     .catch(err => console.error(err));
 });
 
+app.get('/yelpAPI', (req, res) => {
+  const coordinates = {
+    lat: req.query.latitude,
+    lng: req.query.longitude,
+    term: req.query.name
+  }
+  getYelpPhotos(coordinates)
+  .then(response => {
+    console.log(response)
+
+  })
+  .catch(err => console.error(err))
+})
 
 const PORT = 4201;
 app.listen(PORT, () => {
