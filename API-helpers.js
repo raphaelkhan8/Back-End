@@ -1,6 +1,8 @@
 const axios = require('axios');
 
 const { GOOGLE_MAPS_API_KEY } = process.env;
+const { YELP_API_KEY } = process.env;
+
 const googleMapsClient = require('@google/maps').createClient({
   key: GOOGLE_MAPS_API_KEY,
   Promise,
@@ -20,7 +22,7 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
   if (snapshotUrl === '/results') {
     newInterests = interests.slice(0, 5);
   } else {
-    newInterests = [interests[0], interests[1]];
+    newInterests = [interests[4], interests[15]];
   }
   console.log(newInterests);
   const usersNearbyPlaces = newInterests.map((interest) => {
@@ -105,6 +107,29 @@ const getAutocompleteAddress = (query) => {
   return googleMapsClient.placesAutoComplete(options).asPromise();
 };
 
+const getYelpPhotos = (coordinates) => {
+  let isWaiting = false;
+  const options = {
+    latitude: coordinates.lat,
+    longitude: coordinates.lng,
+    term: coordinates.term,
+    radius: 20
+  }
+  const headers = {
+    "Authorization": `Bearer ${YELP_API_KEY}`
+  }
+  return axios.get('https://api.yelp.com/v3/businesses/search', { params: options, headers })
+         .then(response => {
+           
+           if (response.data.businesses[0] === undefined) {
+             console.log(response)
+           }
+           const id = response.data.businesses[0].id;
+           return axios.get(`https://api.yelp.com/v3/businesses/${id}`, { headers })
+         })
+}
+
+module.exports.getYelpPhotos = getYelpPhotos;
 module.exports.getAutocompleteAddress = getAutocompleteAddress;
 module.exports.getPositions = getPositions;
 module.exports.getNearbyPlaces = getNearbyPlaces;

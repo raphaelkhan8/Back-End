@@ -12,6 +12,7 @@ const {
   getPositions,
   getPlacePhoto,
   getAutocompleteAddress,
+  getYelpPhotos
 } = require('./API-helpers');
 
 
@@ -436,6 +437,19 @@ app.get('/autocompleteAddress', (req, res) => {
     .catch(err => console.error(err));
 });
 
+app.get('/yelpAPI', (req, res) => {
+  const coordinates = {
+    lat: req.query.latitude,
+    lng: req.query.longitude,
+    term: req.query.name
+  }
+  getYelpPhotos(coordinates)
+  .then(response => {
+    console.log(response)
+
+  })
+  .catch(err => console.error(err))
+})
 
 const PORT = 4201;
 app.listen(PORT, () => {
