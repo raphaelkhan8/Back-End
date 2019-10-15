@@ -6,7 +6,7 @@ const _ = require('underscore');
 const passport = require('passport');
 const session = require('express-session');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const { db, models } = require('./database');
+const { models } = require('./database');
 const {
   getNearbyPlaces,
   getPositions,
@@ -189,10 +189,6 @@ app.get('/getAllUsersTrips', (req, res) => {
 
 
 //* ****************************
-// CITIES
-//* ****************************
-
-//* ****************************
 // SHARING
 //* ****************************
 
@@ -210,7 +206,9 @@ app.get('/getStats', (req, res) => {
       console.log(user);
       return models.UserTrips.findAll({ where: { userId: user[0].id } });
     })
-    .then(tripId => Promise.all(tripId.map(trip => models.Trips.findAll({ where: { id: trip.tripId } }))))
+    .then(tripId => Promise.all(tripId.map(trip => models.Trips.findAll({ where:
+      { id: trip.tripId },
+    }))))
     .then((tripArray) => {
       console.log(tripArray);
       const previousTrips = tripArray.filter(trip => trip[0].dataValues.dateEnd < currently);
@@ -257,9 +255,16 @@ app.post('/likedInterest', (req, res) => {
   })
     .then((instance) => {
       instance.increment(field);
+      console.log(req.body.photoRef);
+      console.log(req.body.address.split(',')[0]);
       return models.Places.findOrCreate({
         where: {
           name: req.body.name,
+        },
+        defaults: {
+          city: req.body.city,
+          address: req.body.address.split(',')[0],
+          photo: req.body.photoRef,
           userId: req.body.userId,
           status: 'liked',
         },
@@ -327,10 +332,10 @@ app.post('/saveForLater', (req, res) => {
 });
 
 
-//  GET /getLikedAndSavedForLater
+//  GET a user's places for Places page
 app.get('/getLikedAndSavedForLater', (req, res) => {
   console.log('req.parammmmm', req.query);
-  models.Places.findAll({ where: { userId: req.query.userId } })
+  models.Places.findAll({ where: { userId: req.query.id } })
     .then((response) => {
       console.log(response);
       res.send(response);
@@ -348,7 +353,7 @@ app.get('/getLikedAndSavedForLater', (req, res) => {
 
 // GET ALL NEARBY PLACES
 // this endpoint should hit when SHOW ALL RESULTS button is clicked in the Explore page
-// returns an array of arrays where each array contains a bunch of objects: [[{}, {}, ...], [{}, {},...], ...]
+// returns an array of arrays where each array contains a bunch of objects: [[{}, {}, ...], ...]
 // each inner array represets an interest while each object is a nearby place
 app.get('/nearbyPlaces', (req, res) => {
   models.Users.findAll({ where: { id: req.query.id } })
@@ -367,7 +372,8 @@ app.get('/nearbyPlaces', (req, res) => {
       return sortedArray.map(arr => arr[0]);
       // sometimes you need to add .flat() to line 344
     })
-    .then(sortedInterestsArr => Promise.all(getNearbyPlaces(req.query.location, sortedInterestsArr, req.query.snapshotUrl)))
+    .then(sortedInterestsArr => Promise.all(getNearbyPlaces(req.query.location, sortedInterestsArr,
+      req.query.snapshotUrl)))
     .then((response) => {
       let filteredRes = [];
       if (req.query.snapshotUrl === '/results') {
@@ -375,7 +381,7 @@ app.get('/nearbyPlaces', (req, res) => {
         filteredRes = filteredArr;
       } else {
         response.forEach((interestArr) => {
-          for (let i = 0; i < interestArr.length; i++) {
+          for (let i = 0; i < interestArr.length; i += 1) {
             if (i > 6) break;
             filteredRes.push(interestArr[i]);
           }
