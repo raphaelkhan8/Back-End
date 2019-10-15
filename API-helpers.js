@@ -36,8 +36,8 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
       .asPromise()
       .then((response) => {
         console.log(response);
-        const locations = response.json.results.map((place) => {
-          console.log(place);
+        const filteredLocations = response.json.results.filter(place => place.photos);
+        const locations = filteredLocations.map((place) => {
           const cityAndState = `${place.plus_code.compound_code.split(' ')[1]} ${place.plus_code.compound_code.split(' ')[2]} ${place.plus_code.compound_code.split(' ')[3]}`;
           const responseFields = {
             name: place.name,
@@ -50,10 +50,8 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
             priceLevel: place.price_level,
             rating: place.rating,
             interest: options.keyword,
+            photos: place.photos[0].photo_reference,
           };
-          if (place.photos) {
-            responseFields.photos = place.photos[0].photo_reference;
-          }
           return responseFields;
         });
         return locations;
