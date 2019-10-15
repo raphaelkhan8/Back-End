@@ -259,6 +259,8 @@ app.post('/likedInterest', (req, res) => {
       return models.Places.findOrCreate({
         where: {
           name: req.body.name,
+        },
+        defaults: {
           city: req.body.city,
           address: req.body.address.split(',')[0],
           photo: req.body.photoRef,
