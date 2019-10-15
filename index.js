@@ -219,7 +219,7 @@ app.get('/getStats', (req, res) => {
         const citiesArr = prevTrip[0].route.split(' -> ');
         statsObj.cities.push(citiesArr);
       });
-      statsObj.cities = _.uniq(statsObj.cities.flat());
+      statsObj.cities = _.uniq(_.flatten(statsObj.cities));
       statsObj.numberOfCities = statsObj.cities.length;
       statsObj.numberOfTrips = previousTrips.length;
       console.log('STATS', statsObj);
