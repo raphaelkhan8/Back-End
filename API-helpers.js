@@ -1,6 +1,8 @@
 const axios = require('axios');
 
 const { GOOGLE_MAPS_API_KEY } = process.env;
+const { YELP_API_KEY } = process.env;
+
 const googleMapsClient = require('@google/maps').createClient({
   key: GOOGLE_MAPS_API_KEY,
   Promise,
@@ -20,7 +22,7 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
   if (snapshotUrl === '/results') {
     newInterests = interests.slice(0, 5);
   } else {
-    newInterests = [interests[0], interests[1]];
+    newInterests = [interests[4], interests[15]];
   }
   console.log(newInterests);
   const usersNearbyPlaces = newInterests.map((interest) => {
@@ -28,7 +30,7 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
       // location: `29.96768435314543,-90.05025405587452`,
       location,
       keyword: `${interest}`,
-      opennow: true,
+      opennow: false,
       rankby: 'distance',
     };
     return googleMapsClient
@@ -36,21 +38,22 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
       .asPromise()
       .then((response) => {
         console.log(response);
-        const locations = response.json.results.map((place) => {
+        const filteredLocations = response.json.results.filter(place => place.photos);
+        const locations = filteredLocations.map((place) => {
+          const cityAndState = `${place.plus_code.compound_code.split(' ')[1]} ${place.plus_code.compound_code.split(' ')[2]} ${place.plus_code.compound_code.split(' ')[3]}`;
           const responseFields = {
             name: place.name,
             placeId: place.place_id,
             lat: place.geometry.location.lat,
             lng: place.geometry.location.lng,
+            city: cityAndState,
             address: place.vicinity,
             icon: place.icon,
             priceLevel: place.price_level,
             rating: place.rating,
             interest: options.keyword,
+            photos: place.photos[0].photo_reference,
           };
-          if (place.photos) {
-            responseFields.photos = place.photos[0].photo_reference;
-          }
           return responseFields;
         });
         return locations;
@@ -66,33 +69,15 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
 };
 
 const getPositions = (addresses) => {
-  const results = [];
-  return googleMapsClient
-    .geocode({ address: addresses.origin })
-    .asPromise()
-    .then((result) => {
-      const filteredResult = {
-        location: result.json.results[0].geometry.location,
-        // placeId: result.json.results[0].place_id,
-      };
-      results.push(filteredResult);
+  const allPromises = [];
+  allPromises.push(googleMapsClient.geocode({ address: addresses.origin }).asPromise());
+  allPromises.push(googleMapsClient.geocode({ address: addresses.destination }).asPromise());
 
-      return googleMapsClient
-        .geocode({ address: addresses.destination })
-        .asPromise();
-    })
-    .then((result) => {
-      const filteredResult = {
-        location: result.json.results[0].geometry.location,
-        // placeId: result.json.results[0].place_id,
-      };
-      results.push(filteredResult);
-
-      return new Promise((resolve, reject) => {
-        resolve(results);
-        reject(result);
-      });
-    });
+  if (addresses.waypoints) {
+    const waypoints = addresses.waypoints.split(';');
+    waypoints.filter(waypoint => !!waypoint).forEach(waypoint => allPromises.push(googleMapsClient.geocode({ address: waypoint }).asPromise()));
+  }
+  return Promise.allSettled(allPromises);
 };
 
 const getPlacePhoto = (photoRef) => {
@@ -128,6 +113,28 @@ const getDistanceMatrix = (query) => {
   return axios.get(`https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=${origin}&destinations=${destination}&key=${GOOGLE_MAPS_API_KEY}`);
 };
 
+const getYelpPhotos = (coordinates) => {
+  const isWaiting = false;
+  const options = {
+    latitude: coordinates.lat,
+    longitude: coordinates.lng,
+    term: coordinates.term,
+    radius: 20,
+  };
+  const headers = {
+    Authorization: `Bearer ${YELP_API_KEY}`,
+  };
+  return axios.get('https://api.yelp.com/v3/businesses/search', { params: options, headers })
+    .then((response) => {
+      if (response.data.businesses[0] === undefined) {
+        console.log(response);
+      }
+      const { id } = response.data.businesses[0];
+      return axios.get(`https://api.yelp.com/v3/businesses/${id}`, { headers });
+    });
+};
+
+module.exports.getYelpPhotos = getYelpPhotos;
 module.exports.getAutocompleteAddress = getAutocompleteAddress;
 module.exports.getPositions = getPositions;
 module.exports.getNearbyPlaces = getNearbyPlaces;
