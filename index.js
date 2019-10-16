@@ -6,13 +6,14 @@ const _ = require('underscore');
 const passport = require('passport');
 const session = require('express-session');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const throttledQueue = require('throttled-queue');
 const { models } = require('./database');
 const {
   getNearbyPlaces,
   getPositions,
   getPlacePhoto,
   getAutocompleteAddress,
-  getYelpPhotos
+  getYelpPhotos,
 } = require('./API-helpers');
 
 
@@ -206,7 +207,8 @@ app.get('/getStats', (req, res) => {
       console.log(user);
       return models.UserTrips.findAll({ where: { userId: user[0].id } });
     })
-    .then(tripId => Promise.all(tripId.map(trip => models.Trips.findAll({ where:
+    .then(tripId => Promise.all(tripId.map(trip => models.Trips.findAll({
+ where:
       { id: trip.tripId },
     }))))
     .then((tripArray) => {
@@ -398,25 +400,30 @@ app.get('/nearbyPlaces', (req, res) => {
 app.get('/routePositions', (req, res) => {
   getPositions(req.query)
     .then((coords) => {
-      console.log(coords)
+      console.log(coords);
       const filtered = coords.map((location, index) => {
         if (index < 2) {
           return {
-            lat: location.value.json.results[0].geometry.location.lat,
-            lng: location.value.json.results[0].geometry.location.lng,
-            placeId: location.value.json.results[0].place_id || 'no id'
-          }
+            lat: location.json.results[0].geometry.location.lat,
+            lng: location.json.results[0].geometry.location.lng,
+            placeId: location.json.results[0].place_id || 'no id',
+            // lat: location.value.json.results[0].geometry.location.lat,   ---Promise.allSettled() version
+            // lng: location.value.json.results[0].geometry.location.lng,
+            // placeId: location.value.json.results[0].place_id || 'no id',
+          };
         }
         return {
           location: {
-            lat: location.value.json.results[0].geometry.location.lat,
-            lng: location.value.json.results[0].geometry.location.lng,
-            placeId: location.value.json.results[0].place_id || 'no id'
-          }
-        }
-        
-      })
-      console.log(filtered)
+            lat: location.json.results[0].geometry.location.lat,
+            lng: location.json.results[0].geometry.location.lng,
+            placeId: location.json.results[0].place_id || 'no id',
+            // lat: location.value.json.results[0].geometry.location.lat,   ---Promise.allSettled() version
+            // lng: location.value.json.results[0].geometry.location.lng,
+            // placeId: location.value.json.results[0].place_id || 'no id',
+          },
+        };
+      });
+      console.log(filtered);
       res.status(200).send(filtered);
     })
     .catch(err => console.error(err));
@@ -447,15 +454,16 @@ app.get('/yelpAPI', (req, res) => {
   const coordinates = {
     lat: req.query.latitude,
     lng: req.query.longitude,
-    term: req.query.name
-  }
-  getYelpPhotos(coordinates)
-  .then(response => {
-    console.log(response)
+    term: req.query.name,
+  };
+  const throttle = throttledQueue(1, 100);
+  throttle(getYelpPhotos(coordinates))
 
-  })
-  .catch(err => console.error(err))
-})
+    .then((response) => {
+      console.log(response);
+    })
+    .catch(err => console.error(err));
+});
 
 const PORT = 4201;
 app.listen(PORT, () => {
