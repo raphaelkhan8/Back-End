@@ -110,6 +110,12 @@ const getAutocompleteAddress = (query) => {
   return googleMapsClient.placesAutoComplete(options).asPromise();
 };
 
+const getDistanceMatrix = (query) => {
+  console.log(query);
+  const { destination, origin } = query;
+  return axios.get(`https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=${origin}&destinations=${destination}&key=${GOOGLE_MAPS_API_KEY}`);
+};
+
 const getYelpPhotos = (coordinates) => {
   const throttle = throttledQueue(1, 200);
   const options = {
