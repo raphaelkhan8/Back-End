@@ -1,5 +1,5 @@
 const axios = require('axios');
-let throttledQueue = require('throttled-queue');
+const throttledQueue = require('throttled-queue');
 
 const { GOOGLE_MAPS_API_KEY } = process.env;
 const { YELP_API_KEY } = process.env;
@@ -110,23 +110,29 @@ const getAutocompleteAddress = (query) => {
   return googleMapsClient.placesAutoComplete(options).asPromise();
 };
 
+const getDistanceMatrix = (query) => {
+  console.log(query);
+  const { destination, origin } = query;
+  return axios.get(`https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=${origin}&destinations=${destination}&key=${GOOGLE_MAPS_API_KEY}`);
+};
+
 const getYelpPhotos = (coordinates) => {
-  const isWaiting = false;
+  const throttle = throttledQueue(1, 200);
   const options = {
     latitude: coordinates.lat,
     longitude: coordinates.lng,
     term: coordinates.term,
-    radius: 20,
+    radius: 500,
   };
   const headers = {
-    'Authorization': `Bearer ${YELP_API_KEY}`,
+    Authorization: `Bearer ${YELP_API_KEY}`,
   };
   return axios.get('https://api.yelp.com/v3/businesses/search', { params: options, headers })
     .then((response) => {
       if (response.data.businesses[0] === undefined) {
         console.log(response);
       }
-      const {id} = response.data.businesses[0];
+      const { id } = response.data.businesses[0];
       return axios.get(`https://api.yelp.com/v3/businesses/${id}`, { headers });
     });
 };

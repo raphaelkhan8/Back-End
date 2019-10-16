@@ -78,7 +78,7 @@ app.use((req, res, next) => {
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
   } else {
-    console.log(`${req.ip} ${req.method} ${req.url}`);
+    // console.log(`${req.ip} ${req.method} ${req.url}`);
     next();
   }
 });
@@ -156,6 +156,7 @@ app.post('/removeTrip', (req, res) => {
 
 // gets all users past, current, and previous trips
 // gets all users past, current, and previous trips
+// gets all users past, current, and previous trips
 app.get('/getAllUsersTrips', (req, res) => {
   // console.log('req.parammmmm', req.query);
   models.Users.findAll({ where: { id: req.query.id } })
@@ -177,7 +178,6 @@ app.get('/getAllUsersTrips', (req, res) => {
         } else if (trip[0].dataValues.dateEnd < currently) {
           trip[0].dataValues.status = 'previous';
         }
-        console.log('youre on this trip');
       });
       res.send(tripArray);
     })
@@ -217,7 +217,7 @@ app.get('/getStats', (req, res) => {
         const citiesArr = prevTrip[0].route.split(' -> ');
         statsObj.cities.push(citiesArr);
       });
-      statsObj.cities = _.uniq(statsObj.cities.flat());
+      statsObj.cities = _.uniq(_.flatten(statsObj.cities));
       statsObj.numberOfCities = statsObj.cities.length;
       statsObj.numberOfTrips = previousTrips.length;
       // console.log('STATS', statsObj);
@@ -320,7 +320,6 @@ app.post('/deleteInterest', (req, res) => {
     });
 });
 
-
 //* ****************************
 // YOUR PLACES
 //* ****************************
@@ -357,7 +356,6 @@ app.get('/getPlaceInfo', (req, res) => {
     .catch(err => console.error(err));
 });
 
-
 //  POST /saveForLater
 // when something is saved for later - save to places
 // under user places set status to 'saved'
@@ -372,7 +370,6 @@ app.post('/saveForLater', (req, res) => models.Places.findOrCreate({
     console.error('Err trying to save this place in the database', err);
     res.status(400).send(err);
   }));
-
 
 //  GET a user's places for Places page
 app.get('/getLikedAndSavedForLater', (req, res) => {
@@ -398,7 +395,6 @@ app.get('/getLikedAndSavedForLater', (req, res) => {
     });
 });
 
-
 //* ****************************
 // VISTITED PLACES
 //* ****************************
@@ -409,10 +405,7 @@ app.get('/getLikedAndSavedForLater', (req, res) => {
 // each inner array represets an interest while each object is a nearby place
 app.get('/nearbyPlaces', (req, res) => {
   models.Users.findAll({ where: { id: req.query.id } })
-    .then((user) => {
-      // console.log(user);
-      return models.UserInterests.findOrCreate({ where: { userId: user[0].id } });
-    })
+    .then(user => models.UserInterests.findOrCreate({ where: { userId: user[0].id } }))
     .then((interests) => {
       const interestsObj = interests[0].dataValues;
       const interestsArr = [];
@@ -434,7 +427,7 @@ app.get('/nearbyPlaces', (req, res) => {
       } else {
         response.forEach((interestArr) => {
           for (let i = 0; i < interestArr.length; i += 1) {
-            if (i > 6) break;
+            if (i > 4) break;
             filteredRes.push(interestArr[i]);
           }
         });
@@ -489,7 +482,6 @@ app.get('/placePhoto', (req, res) => {
     .catch(err => console.error(err));
 });
 
-
 app.get('/autocompleteAddress', (req, res) => {
   getAutocompleteAddress(req.query)
     .then((suggestion) => {
@@ -500,19 +492,26 @@ app.get('/autocompleteAddress', (req, res) => {
     .catch(err => console.error(err));
 });
 
+const throttle = throttledQueue(1, 300);
 app.get('/yelpAPI', (req, res) => {
   const coordinates = {
     lat: req.query.latitude,
     lng: req.query.longitude,
     term: req.query.name,
   };
-  const throttle = throttledQueue(1, 100);
-  throttle(getYelpPhotos(coordinates))
-
-    .then((response) => {
-      // console.log(response);
-    })
-    .catch(err => console.error(err));
+  throttle(() => {
+    getYelpPhotos(coordinates)
+      .then((response) => {
+        console.log(response);
+        const filteredRes = {
+          photos: [response.data.image_url].concat(response.data.photos),
+          name: response.data.name,
+          phone: response.data.phone,
+        };
+        res.status(200).send(filteredRes);
+      })
+      .catch(err => console.error(err));
+  });
 });
 
 const PORT = 4201;
