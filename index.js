@@ -6,14 +6,15 @@ const _ = require('underscore');
 const passport = require('passport');
 const session = require('express-session');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const throttledQueue = require('throttled-queue');
 const { models } = require('./database');
 const {
   getNearbyPlaces,
   getPositions,
   getPlacePhoto,
   getAutocompleteAddress,
-  getDistanceMatrix,
   getYelpPhotos,
+  getPlaceInfo
 } = require('./API-helpers');
 
 
@@ -77,7 +78,7 @@ app.use((req, res, next) => {
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
   } else {
-    console.log(`${req.ip} ${req.method} ${req.url}`);
+    // console.log(`${req.ip} ${req.method} ${req.url}`);
     next();
   }
 });
@@ -207,7 +208,8 @@ app.get('/getStats', (req, res) => {
       console.log(user);
       return models.UserTrips.findAll({ where: { userId: user[0].id } });
     })
-    .then(tripId => Promise.all(tripId.map(trip => models.Trips.findAll({ where:
+    .then(tripId => Promise.all(tripId.map(trip => models.Trips.findAll({
+      where:
       { id: trip.tripId },
     }))))
     .then((tripArray) => {
@@ -314,23 +316,54 @@ app.post('/deleteInterest', (req, res) => {
 // YOUR PLACES
 //* ****************************
 
+// Get info for a place
+app.get('/getPlaceInfo', (req, res) => {
+  console.log('req.query', req.query);
+  getPlaceInfo(req.query.placeId)
+    .then((response) => {
+      console.log('PLACE INFO RESPONSE', response);
+      const {
+        // eslint-disable-next-line camelcase
+        formatted_address, formatted_phone_number, icon, name, opening_hours, place_id, price_level,
+        rating, reviews, url, website, photos, types, geometry,
+      } = response.data.result;
+      const placeInfo = {
+        address: formatted_address,
+        coordinates: geometry.location,
+        phone: formatted_phone_number,
+        icon,
+        name,
+        hours: opening_hours.weekday_text,
+        open: opening_hours.open_now,
+        category: types[0],
+        placeId: place_id,
+        priceLevel: price_level,
+        rating,
+        reviews: reviews[0],
+        GoogleMapsUrl: url || photos[0].html_attributions[0],
+        website: website || 'No website available',
+        photo: photos[0].photo_reference || icon,
+      };
+      res.send(placeInfo);
+    })
+    .catch(err => console.error(err));
+});
+
+
 //  POST /saveForLater
 // when something is saved for later - save to places
 // under user places set status to 'saved'
-app.post('/saveForLater', (req, res) => {
-  console.log('req.bodyyyy', req.body);
-  return models.Places.findOrCreate({
-    where: {
-      name: req.body.name,
-      userId: req.body.userId,
-      status: 'saved',
-    },
-  }).then(response => res.send(response))
-    .catch((err) => {
-      console.log('Err trying to save this place in the database', err);
-      res.status(400).send(err);
-    });
-});
+app.post('/saveForLater', (req, res) => models.Places.findOrCreate({
+  where: {
+    name: req.body.name,
+    userId: req.body.userId,
+    status: 'saved',
+  },
+}).then(response => res.send(response))
+  .catch((err) => {
+    console.log('Err trying to save this place in the database', err);
+    res.status(400).send(err);
+  }),);
 
 
 //  GET a user's places for Places page
@@ -359,7 +392,7 @@ app.get('/getLikedAndSavedForLater', (req, res) => {
 app.get('/nearbyPlaces', (req, res) => {
   models.Users.findAll({ where: { id: req.query.id } })
     .then((user) => {
-      console.log(user);
+      // console.log(user);
       return models.UserInterests.findOrCreate({ where: { userId: user[0].id } });
     })
     .then((interests) => {
@@ -383,12 +416,12 @@ app.get('/nearbyPlaces', (req, res) => {
       } else {
         response.forEach((interestArr) => {
           for (let i = 0; i < interestArr.length; i += 1) {
-            if (i > 6) break;
+            if (i > 4) break;
             filteredRes.push(interestArr[i]);
           }
         });
       }
-      console.log(filteredRes);
+      // console.log(filteredRes);
       res.status(200).send(filteredRes);
     })
     .catch((err) => {
@@ -399,25 +432,30 @@ app.get('/nearbyPlaces', (req, res) => {
 app.get('/routePositions', (req, res) => {
   getPositions(req.query)
     .then((coords) => {
-      console.log(coords)
+      // console.log(coords);
       const filtered = coords.map((location, index) => {
         if (index < 2) {
           return {
-            lat: location.value.json.results[0].geometry.location.lat,
-            lng: location.value.json.results[0].geometry.location.lng,
-            placeId: location.value.json.results[0].place_id || 'no id'
-          }
+            lat: location.json.results[0].geometry.location.lat,
+            lng: location.json.results[0].geometry.location.lng,
+            placeId: location.json.results[0].place_id || 'no id',
+            // lat: location.value.json.results[0].geometry.location.lat,   ---Promise.allSettled() version
+            // lng: location.value.json.results[0].geometry.location.lng,
+            // placeId: location.value.json.results[0].place_id || 'no id',
+          };
         }
         return {
           location: {
-            lat: location.value.json.results[0].geometry.location.lat,
-            lng: location.value.json.results[0].geometry.location.lng,
-            placeId: location.value.json.results[0].place_id || 'no id'
-          }
-        }
-        
-      })
-      console.log(filtered)
+            lat: location.json.results[0].geometry.location.lat,
+            lng: location.json.results[0].geometry.location.lng,
+            placeId: location.json.results[0].place_id || 'no id',
+            // lat: location.value.json.results[0].geometry.location.lat,   ---Promise.allSettled() version
+            // lng: location.value.json.results[0].geometry.location.lng,
+            // placeId: location.value.json.results[0].place_id || 'no id',
+          },
+        };
+      });
+      // console.log(filtered);
       res.status(200).send(filtered);
     })
     .catch(err => console.error(err));
@@ -426,7 +464,7 @@ app.get('/routePositions', (req, res) => {
 app.get('/placePhoto', (req, res) => {
   getPlacePhoto(req.query)
     .then((photo) => {
-      console.log(photo);
+      // console.log(photo);
       res.set('Content-Type', photo.headers['content-type']);
       res.status(200).send(Buffer.from(photo.data, 'base64'));
     })
@@ -437,34 +475,34 @@ app.get('/placePhoto', (req, res) => {
 app.get('/autocompleteAddress', (req, res) => {
   getAutocompleteAddress(req.query)
     .then((suggestion) => {
-      console.log(suggestion);
+      // console.log(suggestion);
       const filterSuggestions = suggestion.json.predictions.map(place => place.description);
       res.status(200).send(filterSuggestions);
     })
     .catch(err => console.error(err));
 });
 
-app.get('/getDistanceMatrix', (req, res) => {
-  // getDistanceMatrix(req);
-  return getDistanceMatrix(req.query)
-    .then((response) => {
-      res.send(response.data.rows[0].elements[0]);
-    })
-    .catch(error => console.log(error));
-});
+const throttle = throttledQueue(1, 300);
 app.get('/yelpAPI', (req, res) => {
   const coordinates = {
     lat: req.query.latitude,
     lng: req.query.longitude,
-    term: req.query.name
-  }
-  getYelpPhotos(coordinates)
-  .then(response => {
-    console.log(response)
-
-  })
-  .catch(err => console.error(err))
-})
+    term: req.query.name,
+  };
+  throttle(function() {
+    getYelpPhotos(coordinates)
+      .then((response) => {
+        console.log(response);
+        const filteredRes = {
+          photos: [response.data.image_url].concat(response.data.photos),
+          name: response.data.name,
+          phone: response.data.phone,
+        };
+        res.status(200).send(filteredRes)
+      })
+      .catch(err => console.error(err));
+  });
+});
 
 const PORT = 4201;
 app.listen(PORT, () => {
