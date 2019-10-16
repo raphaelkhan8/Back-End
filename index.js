@@ -107,7 +107,7 @@ app.get('/auth/google/callback',
 // add a trip to the database
 // ALSO WORKS FOR SHARING
 app.post('/addTrip', (req, res) => {
-  console.log('req.bodyyyy', req.body);
+  // console.log('req.bodyyyy', req.body);
   return models.Trips.findOrCreate({
     where: {
       route: req.body.route,
@@ -117,7 +117,7 @@ app.post('/addTrip', (req, res) => {
   })
     .then((trip) => {
       const tripData = trip[0].dataValues;
-      console.log(tripData);
+      // console.log(tripData);
       models.UserTrips.findOrCreate({
         where: {
           userId: req.body.userId,
@@ -127,15 +127,15 @@ app.post('/addTrip', (req, res) => {
       res.send(tripData);
     })
     .catch((err) => {
-      console.log('Err trying to create the trip in the database', err);
+      console.error('Err trying to create the trip in the database', err);
       res.status(400).send(err);
     });
 });
 
 // remove a trip from the database
 app.post('/removeTrip', (req, res) => {
-  console.log('REQBODDY', req.body);
-  console.log('REQBODDY', req.body.id);
+  // console.log('REQBODDY', req.body);
+  // console.log('REQBODDY', req.body.id);
   models.UserTrips.destroy({
     where: {
       tripId: req.body.id,
@@ -157,14 +157,14 @@ app.post('/removeTrip', (req, res) => {
 // gets all users past, current, and previous trips
 // gets all users past, current, and previous trips
 app.get('/getAllUsersTrips', (req, res) => {
-  console.log('req.parammmmm', req.query);
+  // console.log('req.parammmmm', req.query);
   models.Users.findAll({ where: { id: req.query.id } })
     .then((user) => {
-      console.log(user);
+      // console.log(user);
       return models.UserTrips.findAll({ where: { userId: user[0].id } });
     })
     .then(tripId => Promise.all(tripId.map((trip) => {
-      console.log('DISDATRIPIDDD', trip);
+      // console.log('DISDATRIPIDDD', trip);
       return models.Trips.findAll({ where: { id: trip.tripId } });
     })))
     .then((tripArray) => {
@@ -172,13 +172,10 @@ app.get('/getAllUsersTrips', (req, res) => {
         const currently = new Date();
         if (trip[0].dataValues.dateStart < currently && trip[0].dataValues.dateEnd > currently) {
           trip[0].dataValues.status = 'current';
-          console.log(trip[0].dataValues.route);
         } else if (trip[0].dataValues.dateStart > currently) {
           trip[0].dataValues.status = 'upcoming';
-          console.log(trip[0].dataValues.route);
         } else if (trip[0].dataValues.dateEnd < currently) {
           trip[0].dataValues.status = 'previous';
-          console.log(trip[0].dataValues.route);
         }
         console.log('youre on this trip');
       });
@@ -205,7 +202,7 @@ app.get('/getStats', (req, res) => {
   const currently = new Date();
   models.Users.findAll({ where: { id: req.query.id } })
     .then((user) => {
-      console.log(user);
+      // console.log(user);
       return models.UserTrips.findAll({ where: { userId: user[0].id } });
     })
     .then(tripId => Promise.all(tripId.map(trip => models.Trips.findAll({
@@ -213,9 +210,9 @@ app.get('/getStats', (req, res) => {
       { id: trip.tripId },
     }))))
     .then((tripArray) => {
-      console.log(tripArray);
+      // console.log(tripArray);
       const previousTrips = tripArray.filter(trip => trip[0].dataValues.dateEnd < currently);
-      console.log(previousTrips);
+      // console.log(previousTrips);
       previousTrips.forEach((prevTrip) => {
         const citiesArr = prevTrip[0].route.split(' -> ');
         statsObj.cities.push(citiesArr);
@@ -223,7 +220,7 @@ app.get('/getStats', (req, res) => {
       statsObj.cities = _.uniq(statsObj.cities.flat());
       statsObj.numberOfCities = statsObj.cities.length;
       statsObj.numberOfTrips = previousTrips.length;
-      console.log('STATS', statsObj);
+      // console.log('STATS', statsObj);
     })
     .then(() => models.UserInterests.findAll({ where: { userId: req.query.id } }))
     .then((interests) => {
@@ -252,24 +249,36 @@ app.get('/getStats', (req, res) => {
 
 // likes an interest
 app.post('/likedInterest', (req, res) => {
+  // console.log(req.body);
   const field = req.body.interest;
   models.UserInterests.findOne({
     where: { userId: req.body.userId },
   })
     .then((instance) => {
       instance.increment(field);
-      console.log(req.body.photoRef);
-      console.log(req.body.address.split(',')[0]);
+      // console.log(req.body.review);
+      // console.log(req.body.photoRef);
+      // console.log(req.body.address.split(',')[0]);
+      const city = `${req.body.address.split(', ')[1]} ${req.body.address.split(', ')[2]}`;
+      // console.log(city);
       return models.Places.findOrCreate({
         where: {
           name: req.body.name,
+          status: req.body.status,
         },
         defaults: {
-          city: req.body.city,
+          coords: JSON.stringify(req.body.coordinates),
+          description: req.body.reviews || null,
+          hours: req.body.hours.join() || null,
+          city,
           address: req.body.address.split(',')[0],
+          priceLevel: req.body.priceLevel,
+          rating: req.body.rating,
+          website: req.body.website,
+          phone: req.body.phone,
           photo: req.body.photoRef,
           userId: req.body.userId,
-          status: 'liked',
+          status: req.body.status,
         },
       });
     })
@@ -318,14 +327,14 @@ app.post('/deleteInterest', (req, res) => {
 
 // Get info for a place
 app.get('/getPlaceInfo', (req, res) => {
-  console.log('req.query', req.query);
+  // console.log('req.query', req.query);
   getPlaceInfo(req.query.placeId)
     .then((response) => {
-      console.log('PLACE INFO RESPONSE', response);
+      // console.log('PLACE INFO RESPONSE', response);
       const {
         // eslint-disable-next-line camelcase
         formatted_address, formatted_phone_number, icon, name, opening_hours, place_id, price_level,
-        rating, reviews, url, website, photos, types, geometry,
+        rating, url, website, photos, types, geometry,
       } = response.data.result;
       const placeInfo = {
         address: formatted_address,
@@ -339,7 +348,6 @@ app.get('/getPlaceInfo', (req, res) => {
         placeId: place_id,
         priceLevel: price_level,
         rating,
-        reviews: reviews[0],
         GoogleMapsUrl: url || photos[0].html_attributions[0],
         website: website || 'No website available',
         photo: photos[0].photo_reference || icon,
@@ -361,21 +369,31 @@ app.post('/saveForLater', (req, res) => models.Places.findOrCreate({
   },
 }).then(response => res.send(response))
   .catch((err) => {
-    console.log('Err trying to save this place in the database', err);
+    console.error('Err trying to save this place in the database', err);
     res.status(400).send(err);
-  }),);
+  }));
 
 
 //  GET a user's places for Places page
 app.get('/getLikedAndSavedForLater', (req, res) => {
-  console.log('req.parammmmm', req.query);
+  // console.log('req.parammmmm', req.query);
+  const placesObj = {};
+  placesObj.savedPlaces = [];
+  placesObj.likedPlaces = [];
   models.Places.findAll({ where: { userId: req.query.id } })
     .then((response) => {
-      console.log(response);
-      res.send(response);
+      response.forEach((place) => {
+        if (place.status === 'saved') {
+          placesObj.savedPlaces.push(place);
+        } else {
+          placesObj.likedPlaces.push(place);
+        }
+      });
+      // console.log(placesObj);
+      res.send(placesObj);
     })
     .catch((err) => {
-      console.log('Err trying to get user places from the database', err);
+      console.error('Err trying to get user places from the database', err);
       res.status(400).send(err);
     });
 });
@@ -392,7 +410,7 @@ app.get('/getLikedAndSavedForLater', (req, res) => {
 app.get('/nearbyPlaces', (req, res) => {
   models.Users.findAll({ where: { id: req.query.id } })
     .then((user) => {
-      console.log(user);
+      // console.log(user);
       return models.UserInterests.findOrCreate({ where: { userId: user[0].id } });
     })
     .then((interests) => {
@@ -421,7 +439,7 @@ app.get('/nearbyPlaces', (req, res) => {
           }
         });
       }
-      console.log(filteredRes);
+      // console.log(filteredRes);
       res.status(200).send(filteredRes);
     })
     .catch((err) => {
@@ -432,7 +450,7 @@ app.get('/nearbyPlaces', (req, res) => {
 app.get('/routePositions', (req, res) => {
   getPositions(req.query)
     .then((coords) => {
-      console.log(coords);
+      // console.log(coords);
       const filtered = coords.map((location, index) => {
         if (index < 2) {
           return {
@@ -455,7 +473,7 @@ app.get('/routePositions', (req, res) => {
           },
         };
       });
-      console.log(filtered);
+      // console.log(filtered);
       res.status(200).send(filtered);
     })
     .catch(err => console.error(err));
@@ -464,7 +482,7 @@ app.get('/routePositions', (req, res) => {
 app.get('/placePhoto', (req, res) => {
   getPlacePhoto(req.query)
     .then((photo) => {
-      console.log(photo);
+      // console.log(photo);
       res.set('Content-Type', photo.headers['content-type']);
       res.status(200).send(Buffer.from(photo.data, 'base64'));
     })
@@ -475,7 +493,7 @@ app.get('/placePhoto', (req, res) => {
 app.get('/autocompleteAddress', (req, res) => {
   getAutocompleteAddress(req.query)
     .then((suggestion) => {
-      console.log(suggestion);
+      // console.log(suggestion);
       const filterSuggestions = suggestion.json.predictions.map(place => place.description);
       res.status(200).send(filterSuggestions);
     })
@@ -492,7 +510,7 @@ app.get('/yelpAPI', (req, res) => {
   throttle(getYelpPhotos(coordinates))
 
     .then((response) => {
-      console.log(response);
+      // console.log(response);
     })
     .catch(err => console.error(err));
 });
