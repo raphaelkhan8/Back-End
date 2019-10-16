@@ -31,6 +31,10 @@ const Places = db.define('places', {
     type: Sequelize.STRING,
     allowNull: true,
   },
+  coords: {
+    type: Sequelize.STRING,
+    allowNull: true,
+  },
   hours: {
     type: Sequelize.STRING,
     allowNull: true,
@@ -40,6 +44,22 @@ const Places = db.define('places', {
     allowNull: true,
   },
   photo: {
+    type: Sequelize.STRING,
+    allowNull: true,
+  },
+  priceLevel: {
+    type: Sequelize.INTEGER,
+    allowNull: true,
+  },
+  rating: {
+    type: Sequelize.INTEGER,
+    allowNull: true,
+  },
+  website: {
+    type: Sequelize.STRING,
+    allowNull: true,
+  },
+  review: {
     type: Sequelize.STRING,
     allowNull: true,
   },
