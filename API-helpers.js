@@ -38,7 +38,7 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
       .placesNearby(options)
       .asPromise()
       .then((response) => {
-        console.log(response);
+        // console.log(response);
         const filteredLocations = response.json.results.filter(place => place.photos);
         const locations = filteredLocations.map((place) => {
           const cityAndState = `${place.plus_code.compound_code.split(' ')[1]} ${place.plus_code.compound_code.split(' ')[2]} ${place.plus_code.compound_code.split(' ')[3]}`;
@@ -65,7 +65,7 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
         // res.status(500).send(err);
       });
   });
-  console.log(usersNearbyPlaces);
+  // console.log(usersNearbyPlaces);
   return usersNearbyPlaces;
 };
 
