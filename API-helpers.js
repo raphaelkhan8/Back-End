@@ -131,11 +131,22 @@ const getYelpPhotos = (coordinates) => {
     });
 };
 
+const getPlaceInfo = (placeId) => {
+  const options = {
+    key: GOOGLE_MAPS_API_KEY,
+    place_id: placeId,
+  };
+  return axios.get('https://maps.googleapis.com/maps/api/place/details/json', {
+    params: options,
+  });
+};
+
 module.exports.getYelpPhotos = getYelpPhotos;
 module.exports.getAutocompleteAddress = getAutocompleteAddress;
 module.exports.getPositions = getPositions;
 module.exports.getNearbyPlaces = getNearbyPlaces;
 module.exports.getPlacePhoto = getPlacePhoto;
+module.exports.getPlaceInfo = getPlaceInfo;
 
 // const throttle = function(callback, limit) {
 //   var wait = false;                  // Initially, we're not waiting
