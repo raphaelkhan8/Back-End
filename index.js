@@ -78,7 +78,7 @@ app.use((req, res, next) => {
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
   } else {
-    console.log(`${req.ip} ${req.method} ${req.url}`);
+    // console.log(`${req.ip} ${req.method} ${req.url}`);
     next();
   }
 });
@@ -392,7 +392,7 @@ app.get('/getLikedAndSavedForLater', (req, res) => {
 app.get('/nearbyPlaces', (req, res) => {
   models.Users.findAll({ where: { id: req.query.id } })
     .then((user) => {
-      console.log(user);
+      // console.log(user);
       return models.UserInterests.findOrCreate({ where: { userId: user[0].id } });
     })
     .then((interests) => {
@@ -416,12 +416,12 @@ app.get('/nearbyPlaces', (req, res) => {
       } else {
         response.forEach((interestArr) => {
           for (let i = 0; i < interestArr.length; i += 1) {
-            if (i > 6) break;
+            if (i > 4) break;
             filteredRes.push(interestArr[i]);
           }
         });
       }
-      console.log(filteredRes);
+      // console.log(filteredRes);
       res.status(200).send(filteredRes);
     })
     .catch((err) => {
@@ -432,7 +432,7 @@ app.get('/nearbyPlaces', (req, res) => {
 app.get('/routePositions', (req, res) => {
   getPositions(req.query)
     .then((coords) => {
-      console.log(coords);
+      // console.log(coords);
       const filtered = coords.map((location, index) => {
         if (index < 2) {
           return {
@@ -455,7 +455,7 @@ app.get('/routePositions', (req, res) => {
           },
         };
       });
-      console.log(filtered);
+      // console.log(filtered);
       res.status(200).send(filtered);
     })
     .catch(err => console.error(err));
@@ -464,7 +464,7 @@ app.get('/routePositions', (req, res) => {
 app.get('/placePhoto', (req, res) => {
   getPlacePhoto(req.query)
     .then((photo) => {
-      console.log(photo);
+      // console.log(photo);
       res.set('Content-Type', photo.headers['content-type']);
       res.status(200).send(Buffer.from(photo.data, 'base64'));
     })
@@ -475,26 +475,33 @@ app.get('/placePhoto', (req, res) => {
 app.get('/autocompleteAddress', (req, res) => {
   getAutocompleteAddress(req.query)
     .then((suggestion) => {
-      console.log(suggestion);
+      // console.log(suggestion);
       const filterSuggestions = suggestion.json.predictions.map(place => place.description);
       res.status(200).send(filterSuggestions);
     })
     .catch(err => console.error(err));
 });
 
+const throttle = throttledQueue(1, 300);
 app.get('/yelpAPI', (req, res) => {
   const coordinates = {
     lat: req.query.latitude,
     lng: req.query.longitude,
     term: req.query.name,
   };
-  const throttle = throttledQueue(1, 100);
-  throttle(getYelpPhotos(coordinates))
-
-    .then((response) => {
-      console.log(response);
-    })
-    .catch(err => console.error(err));
+  throttle(function() {
+    getYelpPhotos(coordinates)
+      .then((response) => {
+        console.log(response);
+        const filteredRes = {
+          photos: [response.data.image_url].concat(response.data.photos),
+          name: response.data.name,
+          phone: response.data.phone,
+        };
+        res.status(200).send(filteredRes)
+      })
+      .catch(err => console.error(err));
+  });
 });
 
 const PORT = 4201;
