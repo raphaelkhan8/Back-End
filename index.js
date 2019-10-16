@@ -14,7 +14,7 @@ const {
   getPlacePhoto,
   getAutocompleteAddress,
   getYelpPhotos,
-  getPlaceInfo
+  getPlaceInfo,
 } = require('./API-helpers');
 
 
@@ -311,7 +311,6 @@ app.post('/deleteInterest', (req, res) => {
     });
 });
 
-
 //* ****************************
 // YOUR PLACES
 //* ****************************
@@ -349,7 +348,6 @@ app.get('/getPlaceInfo', (req, res) => {
     .catch(err => console.error(err));
 });
 
-
 //  POST /saveForLater
 // when something is saved for later - save to places
 // under user places set status to 'saved'
@@ -363,8 +361,7 @@ app.post('/saveForLater', (req, res) => models.Places.findOrCreate({
   .catch((err) => {
     console.log('Err trying to save this place in the database', err);
     res.status(400).send(err);
-  }),);
-
+  }));
 
 //  GET a user's places for Places page
 app.get('/getLikedAndSavedForLater', (req, res) => {
@@ -380,7 +377,6 @@ app.get('/getLikedAndSavedForLater', (req, res) => {
     });
 });
 
-
 //* ****************************
 // VISTITED PLACES
 //* ****************************
@@ -391,10 +387,7 @@ app.get('/getLikedAndSavedForLater', (req, res) => {
 // each inner array represets an interest while each object is a nearby place
 app.get('/nearbyPlaces', (req, res) => {
   models.Users.findAll({ where: { id: req.query.id } })
-    .then((user) => {
-      // console.log(user);
-      return models.UserInterests.findOrCreate({ where: { userId: user[0].id } });
-    })
+    .then(user => models.UserInterests.findOrCreate({ where: { userId: user[0].id } }))
     .then((interests) => {
       const interestsObj = interests[0].dataValues;
       const interestsArr = [];
@@ -471,7 +464,6 @@ app.get('/placePhoto', (req, res) => {
     .catch(err => console.error(err));
 });
 
-
 app.get('/autocompleteAddress', (req, res) => {
   getAutocompleteAddress(req.query)
     .then((suggestion) => {
@@ -489,7 +481,7 @@ app.get('/yelpAPI', (req, res) => {
     lng: req.query.longitude,
     term: req.query.name,
   };
-  throttle(function() {
+  throttle(() => {
     getYelpPhotos(coordinates)
       .then((response) => {
         console.log(response);
@@ -498,7 +490,7 @@ app.get('/yelpAPI', (req, res) => {
           name: response.data.name,
           phone: response.data.phone,
         };
-        res.status(200).send(filteredRes)
+        res.status(200).send(filteredRes);
       })
       .catch(err => console.error(err));
   });
