@@ -1,4 +1,5 @@
 const axios = require('axios');
+let throttledQueue = require('throttled-queue');
 
 const { GOOGLE_MAPS_API_KEY } = process.env;
 const { YELP_API_KEY } = process.env;
@@ -15,16 +16,16 @@ const googleMapsClient = require('@google/maps').createClient({
 const getNearbyPlaces = (location, interests, snapshotUrl) => {
   // lat: 29.96768435314543,
   // lng: -90.05025405587452
-  console.log(snapshotUrl);
-  console.log(location);
-  console.log(interests);
+  // console.log(snapshotUrl);
+  // console.log(location);
+  // console.log(interests);
   let newInterests;
   if (snapshotUrl === '/results') {
     newInterests = interests.slice(0, 5);
   } else {
-    newInterests = [interests[4], interests[15]];
+    newInterests = [interests[0], interests[12]];
   }
-  console.log(newInterests);
+  // console.log(newInterests);
   const usersNearbyPlaces = newInterests.map((interest) => {
     const options = {
       // location: `29.96768435314543,-90.05025405587452`,
@@ -73,12 +74,13 @@ const getPositions = (addresses) => {
   allPromises.push(googleMapsClient.geocode({ address: addresses.origin }).asPromise());
   allPromises.push(googleMapsClient.geocode({ address: addresses.destination }).asPromise());
 
-  if (!!addresses.waypoints) {
-    const waypoints = addresses.waypoints.split(';')
-    waypoints.filter(waypoint => !!waypoint).forEach(waypoint => allPromises.push(googleMapsClient.geocode({ address: waypoint }).asPromise()));   
+  if (addresses.waypoints) {
+    const waypoints = addresses.waypoints.split(';');
+    waypoints
+      .filter(waypoint => !!waypoint)
+      .forEach(waypoint => allPromises.push(googleMapsClient.geocode({ address: waypoint }).asPromise()));
   }
-  return Promise.allSettled(allPromises);
-      
+  return Promise.all(allPromises);
 };
 
 const getPlacePhoto = (photoRef) => {
@@ -109,26 +111,25 @@ const getAutocompleteAddress = (query) => {
 };
 
 const getYelpPhotos = (coordinates) => {
-  let isWaiting = false;
+  const isWaiting = false;
   const options = {
     latitude: coordinates.lat,
     longitude: coordinates.lng,
     term: coordinates.term,
-    radius: 20
-  }
+    radius: 20,
+  };
   const headers = {
-    "Authorization": `Bearer ${YELP_API_KEY}`
-  }
+    'Authorization': `Bearer ${YELP_API_KEY}`,
+  };
   return axios.get('https://api.yelp.com/v3/businesses/search', { params: options, headers })
-         .then(response => {
-           
-           if (response.data.businesses[0] === undefined) {
-             console.log(response)
-           }
-           const id = response.data.businesses[0].id;
-           return axios.get(`https://api.yelp.com/v3/businesses/${id}`, { headers })
-         })
-}
+    .then((response) => {
+      if (response.data.businesses[0] === undefined) {
+        console.log(response);
+      }
+      const {id} = response.data.businesses[0];
+      return axios.get(`https://api.yelp.com/v3/businesses/${id}`, { headers });
+    });
+};
 
 module.exports.getYelpPhotos = getYelpPhotos;
 module.exports.getAutocompleteAddress = getAutocompleteAddress;
