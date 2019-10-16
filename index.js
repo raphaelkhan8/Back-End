@@ -14,6 +14,7 @@ const {
   getPlacePhoto,
   getAutocompleteAddress,
   getYelpPhotos,
+  getPlaceInfo,
 } = require('./API-helpers');
 
 
@@ -315,23 +316,54 @@ app.post('/deleteInterest', (req, res) => {
 // YOUR PLACES
 //* ****************************
 
+// Get info for a place
+app.get('/getPlaceInfo', (req, res) => {
+  console.log('req.query', req.query);
+  getPlaceInfo(req.query.placeId)
+    .then((response) => {
+      console.log('PLACE INFO RESPONSE', response);
+      const {
+        // eslint-disable-next-line camelcase
+        formatted_address, formatted_phone_number, icon, name, opening_hours, place_id, price_level,
+        rating, reviews, url, website, photos, types, geometry,
+      } = response.data.result;
+      const placeInfo = {
+        address: formatted_address,
+        coordinates: geometry.location,
+        phone: formatted_phone_number,
+        icon,
+        name,
+        hours: opening_hours.weekday_text,
+        open: opening_hours.open_now,
+        category: types[0],
+        placeId: place_id,
+        priceLevel: price_level,
+        rating,
+        reviews: reviews[0],
+        GoogleMapsUrl: url || photos[0].html_attributions[0],
+        website: website || 'No website available',
+        photo: photos[0].photo_reference || icon,
+      };
+      res.send(placeInfo);
+    })
+    .catch(err => console.error(err));
+});
+
+
 //  POST /saveForLater
 // when something is saved for later - save to places
 // under user places set status to 'saved'
-app.post('/saveForLater', (req, res) => {
-  console.log('req.bodyyyy', req.body);
-  return models.Places.findOrCreate({
-    where: {
-      name: req.body.name,
-      userId: req.body.userId,
-      status: 'saved',
-    },
-  }).then(response => res.send(response))
-    .catch((err) => {
-      console.log('Err trying to save this place in the database', err);
-      res.status(400).send(err);
-    });
-});
+app.post('/saveForLater', (req, res) => models.Places.findOrCreate({
+  where: {
+    name: req.body.name,
+    userId: req.body.userId,
+    status: 'saved',
+  },
+}).then(response => res.send(response))
+  .catch((err) => {
+    console.log('Err trying to save this place in the database', err);
+    res.status(400).send(err);
+  }),);
 
 
 //  GET a user's places for Places page
