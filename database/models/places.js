@@ -59,7 +59,7 @@ const Places = db.define('places', {
     type: Sequelize.STRING,
     allowNull: true,
   },
-  review: {
+  placeId: {
     type: Sequelize.STRING,
     allowNull: true,
   },
