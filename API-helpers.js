@@ -54,7 +54,7 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
             rating: place.rating,
             interest: options.keyword,
             photos: place.photos[0].photo_reference,
-            clicked: false
+            clicked: false,
           };
           return responseFields;
         });
