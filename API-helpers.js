@@ -43,6 +43,7 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
         const locations = filteredLocations.map((place) => {
           const cityAndState = `${place.plus_code.compound_code.split(' ')[1]} ${place.plus_code.compound_code.split(' ')[2]} ${place.plus_code.compound_code.split(' ')[3]}`;
           const responseFields = {
+            clicked: false,
             name: place.name,
             placeId: place.place_id,
             lat: place.geometry.location.lat,
@@ -54,7 +55,6 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
             rating: place.rating,
             interest: options.keyword,
             photos: place.photos[0].photo_reference,
-            clicked: false,
           };
           return responseFields;
         });
