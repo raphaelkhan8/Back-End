@@ -274,6 +274,7 @@ app.post('/likedInterest', (req, res) => {
           hours: req.body.hours.join() || null,
           city,
           address: req.body.address.split(',')[0],
+          placeId: req.body.placeId,
           priceLevel: req.body.priceLevel,
           rating: req.body.rating,
           website: req.body.website,
@@ -353,6 +354,7 @@ app.get('/getPlaceInfo', (req, res) => {
         website: website || 'No website available',
         photo: photos[0].photo_reference || icon,
       };
+      console.log(placeInfo);
       res.send(placeInfo);
     })
     .catch(err => console.error(err));
