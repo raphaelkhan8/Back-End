@@ -166,9 +166,10 @@ app.get('/getAllUsersTrips', (req, res) => {
     .then(user =>
       // console.log(user);
       models.UserTrips.findAll({ where: { userId: user[0].id } }))
-    .then(tripId => Promise.all(tripId.map(trip =>
-      // console.log('DISDATRIPIDDD', trip);
-      models.Trips.findAll({ where: { id: trip.tripId } }))))
+    .then(tripId => Promise.all(tripId.map((trip) => {
+      console.log('DISDATRIPIDDD', trip);
+      return models.Trips.findAll({ where: { id: trip.tripId } });
+    })))
     .then((tripArray) => {
       tripArray.map((trip) => {
         const currently = new Date();
@@ -179,6 +180,8 @@ app.get('/getAllUsersTrips', (req, res) => {
         } else if (trip[0].dataValues.dateEnd < currently) {
           trip[0].dataValues.status = 'previous';
         }
+        trip[0].dataValues.wayPoints = JSON.parse(trip[0].dataValues.wayPoints);
+        console.log(trip[0].dataValues.wayPoints);
       });
       res.send(tripArray);
     })
@@ -255,8 +258,8 @@ app.post('/likedInterest', (req, res) => {
     .then((instance) => {
       instance.increment(field);
       // const { photoRef } = req.body;
-    //   return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoRef}&key=${GOOGLE_MAPS_API_KEY}`;
-    // }).then((imgUrl) => {
+      //   return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoRef}&key=${GOOGLE_MAPS_API_KEY}`;
+      // }).then((imgUrl) => {
       const city = `${req.body.address.split(', ')[1]} ${req.body.address.split(', ')[2]}`;
       return models.Places.findOrCreate({
         where: {
@@ -430,8 +433,7 @@ app.get('/nearbyPlaces', (req, res) => {
       return sortedArray.map(arr => arr[0]);
       // sometimes you need to add .flat() to line 344
     })
-    .then(sortedInterestsArr => Promise.all(getNearbyPlaces(req.query.location, sortedInterestsArr,
-      req.query.snapshotUrl)))
+    .then(sortedInterestsArr => Promise.all(getNearbyPlaces(req.query.location, sortedInterestsArr, req.query.snapshotUrl)))
     .then((response) => {
       let filteredRes = [];
       if (req.query.snapshotUrl === '/results') {
