@@ -19,8 +19,8 @@ const {
 
 
 const {
-  GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
-  GOOGLE_CLIENT_CALLBACK_URL, FRONTEND_BASE_URL, SESSION_SECRET,
+  GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CLIENT_CALLBACK_URL, FRONTEND_BASE_URL,
+  SESSION_SECRET, GOOGLE_MAPS_API_KEY,
 } = process.env;
 
 const app = express();
@@ -163,14 +163,12 @@ app.post('/removeTrip', (req, res) => {
 app.get('/getAllUsersTrips', (req, res) => {
   // console.log('req.parammmmm', req.query);
   models.Users.findAll({ where: { id: req.query.id } })
-    .then((user) => {
+    .then(user =>
       // console.log(user);
-      return models.UserTrips.findAll({ where: { userId: user[0].id } });
-    })
-    .then(tripId => Promise.all(tripId.map((trip) => {
+      models.UserTrips.findAll({ where: { userId: user[0].id } }),)
+    .then(tripId => Promise.all(tripId.map(trip =>
       // console.log('DISDATRIPIDDD', trip);
-      return models.Trips.findAll({ where: { id: trip.tripId } });
-    })))
+      models.Trips.findAll({ where: { id: trip.tripId } }),)))
     .then((tripArray) => {
       tripArray.map((trip) => {
         const currently = new Date();
@@ -204,10 +202,9 @@ app.get('/getStats', (req, res) => {
   statsObj.numberOfCities = 0;
   const currently = new Date();
   models.Users.findAll({ where: { id: req.query.id } })
-    .then((user) => {
+    .then(user =>
       // console.log(user);
-      return models.UserTrips.findAll({ where: { userId: user[0].id } });
-    })
+      models.UserTrips.findAll({ where: { userId: user[0].id } }),)
     .then(tripId => Promise.all(tripId.map(trip => models.Trips.findAll({
       where:
       { id: trip.tripId },
@@ -329,16 +326,16 @@ app.post('/deleteInterest', (req, res) => {
 
 // Get info for a place
 app.get('/getPlaceInfo', (req, res) => {
+  let placeInfo = {};
   // console.log('req.query', req.query);
   getPlaceInfo(req.query.placeId)
     .then((response) => {
-      // console.log('PLACE INFO RESPONSE', response);
       const {
         // eslint-disable-next-line camelcase
         formatted_address, formatted_phone_number, icon, name, opening_hours, place_id, price_level,
         rating, url, website, photos, types, geometry,
       } = response.data.result;
-      const placeInfo = {
+      placeInfo = {
         address: formatted_address,
         coordinates: geometry.location,
         phone: formatted_phone_number,
@@ -352,11 +349,42 @@ app.get('/getPlaceInfo', (req, res) => {
         rating: Math.round(100 * rating) / 100,
         GoogleMapsUrl: url || photos[0].html_attributions[0],
         website: website || 'No website available',
-        photo: photos[0].photo_reference || icon,
+        // photo: photos[0].photo_reference || icon,
       };
       console.log(placeInfo);
+      const photoRef = photos[0].photo_reference;
+      return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoRef}&key=${GOOGLE_MAPS_API_KEY}`;
+    }).then((imgUrl) => {
+      console.log(imgUrl);
+      // eslint-disable-next-line no-unused-expressions
+      placeInfo.photo = imgUrl;
       res.send(placeInfo);
     })
+  // console.log('PLACE INFO RESPONSE', response);
+  // const {
+  //   // eslint-disable-next-line camelcase
+  //   formatted_address, formatted_phone_number, icon, name, opening_hours, place_id, price_level,
+  //   rating, url, website, photos, types, geometry,
+  // } = response.data.result;
+  // const placeInfo = {
+  //   address: formatted_address,
+  //   coordinates: geometry.location,
+  //   phone: formatted_phone_number,
+  //   icon,
+  //   name,
+  //   hours: opening_hours.weekday_text,
+  //   open: opening_hours.open_now,
+  //   category: types[0],
+  //   placeId: place_id,
+  //   priceLevel: price_level,
+  //   rating: Math.round(100 * rating) / 100,
+  //   GoogleMapsUrl: url || photos[0].html_attributions[0],
+  //   website: website || 'No website available',
+  //   photo: photos[0].photo_reference || icon,
+  // };
+  // console.log(placeInfo);
+  // res.send(placeInfo);
+    // })
     .catch(err => console.error(err));
 });
 
