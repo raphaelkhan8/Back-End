@@ -347,11 +347,12 @@ app.get('/getPlaceInfo', (req, res) => {
         category: types[0],
         placeId: place_id,
         priceLevel: price_level,
-        rating: rating.slice(0, 3),
+        rating,
         GoogleMapsUrl: url || photos[0].html_attributions[0],
         website: website || 'No website available',
         photo: photos[0].photo_reference || icon,
       };
+      console.log(placeInfo);
       res.send(placeInfo);
     })
     .catch(err => console.error(err));
