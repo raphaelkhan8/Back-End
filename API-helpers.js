@@ -18,7 +18,7 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
   // lng: -90.05025405587452
   // console.log(snapshotUrl);
   // console.log(location);
-  // console.log(interests);
+  console.log(interests);
   let newInterests;
   if (snapshotUrl === '/results') {
     newInterests = interests.slice(0, 5);
@@ -38,7 +38,7 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
       .placesNearby(options)
       .asPromise()
       .then((response) => {
-        // console.log(response);
+        console.log(response);
         const filteredLocations = response.json.results.filter(place => place.photos);
         const locations = filteredLocations.map((place) => {
           const cityAndState = `${place.plus_code.compound_code.split(' ')[1]} ${place.plus_code.compound_code.split(' ')[2]} ${place.plus_code.compound_code.split(' ')[3]}`;
@@ -55,6 +55,14 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
             interest: options.keyword,
             photos: place.photos[0].photo_reference,
           };
+          // console.log(responseFields.interest);
+          const interestArr = [];
+          responseFields.interest.split('_').forEach(((word) => {
+            console.log(word);
+            interestArr.push(word[0].toUpperCase().concat(word.slice(1)));
+          }));
+          console.log(interestArr);
+          responseFields.interest = interestArr.join(' ');
           return responseFields;
         });
         return locations;
