@@ -165,10 +165,10 @@ app.get('/getAllUsersTrips', (req, res) => {
   models.Users.findAll({ where: { id: req.query.id } })
     .then(user =>
       // console.log(user);
-      models.UserTrips.findAll({ where: { userId: user[0].id } }),)
+      models.UserTrips.findAll({ where: { userId: user[0].id } }))
     .then(tripId => Promise.all(tripId.map(trip =>
       // console.log('DISDATRIPIDDD', trip);
-      models.Trips.findAll({ where: { id: trip.tripId } }),)))
+      models.Trips.findAll({ where: { id: trip.tripId } }))))
     .then((tripArray) => {
       tripArray.map((trip) => {
         const currently = new Date();
@@ -202,9 +202,7 @@ app.get('/getStats', (req, res) => {
   statsObj.numberOfCities = 0;
   const currently = new Date();
   models.Users.findAll({ where: { id: req.query.id } })
-    .then(user =>
-      // console.log(user);
-      models.UserTrips.findAll({ where: { userId: user[0].id } }),)
+    .then(user => models.UserTrips.findAll({ where: { userId: user[0].id } }))
     .then(tripId => Promise.all(tripId.map(trip => models.Trips.findAll({
       where:
       { id: trip.tripId },
@@ -256,11 +254,10 @@ app.post('/likedInterest', (req, res) => {
   })
     .then((instance) => {
       instance.increment(field);
-      // console.log(req.body.review);
-      // console.log(req.body.photoRef);
-      // console.log(req.body.address.split(',')[0]);
+      // const { photoRef } = req.body;
+    //   return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoRef}&key=${GOOGLE_MAPS_API_KEY}`;
+    // }).then((imgUrl) => {
       const city = `${req.body.address.split(', ')[1]} ${req.body.address.split(', ')[2]}`;
-      // console.log(city);
       return models.Places.findOrCreate({
         where: {
           name: req.body.name,
@@ -276,6 +273,7 @@ app.post('/likedInterest', (req, res) => {
           rating: req.body.rating,
           website: req.body.website,
           phone: req.body.phone,
+          // photo: imgUrl,
           photo: req.body.photoRef,
           userId: req.body.userId,
           status: req.body.status,
@@ -360,31 +358,6 @@ app.get('/getPlaceInfo', (req, res) => {
       placeInfo.photo = imgUrl;
       res.send(placeInfo);
     })
-  // console.log('PLACE INFO RESPONSE', response);
-  // const {
-  //   // eslint-disable-next-line camelcase
-  //   formatted_address, formatted_phone_number, icon, name, opening_hours, place_id, price_level,
-  //   rating, url, website, photos, types, geometry,
-  // } = response.data.result;
-  // const placeInfo = {
-  //   address: formatted_address,
-  //   coordinates: geometry.location,
-  //   phone: formatted_phone_number,
-  //   icon,
-  //   name,
-  //   hours: opening_hours.weekday_text,
-  //   open: opening_hours.open_now,
-  //   category: types[0],
-  //   placeId: place_id,
-  //   priceLevel: price_level,
-  //   rating: Math.round(100 * rating) / 100,
-  //   GoogleMapsUrl: url || photos[0].html_attributions[0],
-  //   website: website || 'No website available',
-  //   photo: photos[0].photo_reference || icon,
-  // };
-  // console.log(placeInfo);
-  // res.send(placeInfo);
-    // })
     .catch(err => console.error(err));
 });
 
@@ -418,7 +391,6 @@ app.get('/getLikedAndSavedForLater', (req, res) => {
           placesObj.likedPlaces.push(place);
         }
       });
-      // console.log(placesObj);
       res.send(placesObj);
     })
     .catch((err) => {
@@ -464,7 +436,6 @@ app.get('/nearbyPlaces', (req, res) => {
           }
         });
       }
-      // console.log(filteredRes);
       res.status(200).send(filteredRes);
     })
     .catch((err) => {
@@ -517,7 +488,6 @@ app.get('/placePhoto', (req, res) => {
 app.get('/autocompleteAddress', (req, res) => {
   getAutocompleteAddress(req.query)
     .then((suggestion) => {
-      // console.log(suggestion);
       const filterSuggestions = suggestion.json.predictions.map(place => place.description);
       res.status(200).send(filterSuggestions);
     })
@@ -534,7 +504,7 @@ app.get('/yelpAPI', (req, res) => {
   throttle(() => {
     getYelpPhotos(coordinates)
       .then((response) => {
-        console.log(response);
+        // console.log(response);
         const filteredRes = {
           photos: [response.data.image_url].concat(response.data.photos),
           name: response.data.name,
