@@ -36,7 +36,7 @@ const Places = db.define('places', {
     allowNull: true,
   },
   hours: {
-    type: Sequelize.STRING,
+    type: Sequelize.STRING(1234),
     allowNull: true,
   },
   phone: {
@@ -44,7 +44,7 @@ const Places = db.define('places', {
     allowNull: true,
   },
   photo: {
-    type: Sequelize.STRING,
+    type: Sequelize.STRING(1234),
     allowNull: true,
   },
   priceLevel: {
