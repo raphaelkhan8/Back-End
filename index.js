@@ -107,12 +107,15 @@ app.get('/auth/google/callback',
 // add a trip to the database
 // ALSO WORKS FOR SHARING
 app.post('/addTrip', (req, res) => {
-  // console.log('req.bodyyyy', req.body);
+  console.log('req.bodyyyy', req.body);
+  const newWayPoints = JSON.stringify(req.body.waypoints);
+  console.log(newWayPoints);
   return models.Trips.findOrCreate({
     where: {
       route: req.body.route,
       dateStart: req.body.dateStart,
       dateEnd: req.body.dateEnd,
+      wayPoints: newWayPoints,
     },
   })
     .then((trip) => {
