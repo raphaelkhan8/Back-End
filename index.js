@@ -349,7 +349,7 @@ app.get('/getPlaceInfo', (req, res) => {
         category: types[0],
         placeId: place_id,
         priceLevel: price_level,
-        rating,
+        rating: Math.round(100 * rating) / 100,
         GoogleMapsUrl: url || photos[0].html_attributions[0],
         website: website || 'No website available',
         photo: photos[0].photo_reference || icon,
