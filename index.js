@@ -271,7 +271,6 @@ app.post('/likedInterest', (req, res) => {
         },
         defaults: {
           coords: JSON.stringify(req.body.coordinates),
-          description: req.body.reviews || null,
           hours: req.body.hours.join() || null,
           city,
           address: req.body.address.split(',')[0],
