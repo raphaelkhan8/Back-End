@@ -115,20 +115,28 @@ app.post('/addTrip', (req, res) => {
       route: req.body.route,
       dateStart: req.body.dateStart,
       dateEnd: req.body.dateEnd,
-      wayPoints: newWayPoints,
     },
+    defaults: {
+      wayPoints: req.body.wayPoints,
+    },
+  }).then((trip) => {
+    console.log(trip);
+    if (trip[1] === false) {
+      models.Trips.update(
+        { wayPoints: newWayPoints },
+        { where: { id: trip[0].dataValues.id } },
+      );
+    }
+    const tripData = trip[0].dataValues;
+    // console.log(tripData);
+    models.UserTrips.findOrCreate({
+      where: {
+        userId: req.body.userId,
+        tripId: tripData.id,
+      },
+    });
+    res.send(tripData);
   })
-    .then((trip) => {
-      const tripData = trip[0].dataValues;
-      // console.log(tripData);
-      models.UserTrips.findOrCreate({
-        where: {
-          userId: req.body.userId,
-          tripId: tripData.id,
-        },
-      });
-      res.send(tripData);
-    })
     .catch((err) => {
       console.error('Err trying to create the trip in the database', err);
       res.status(400).send(err);
@@ -466,6 +474,13 @@ app.get('/nearbyPlaces', (req, res) => {
       let filteredRes = [];
       if (req.query.snapshotUrl === '/results') {
         const filteredArr = response.filter(arr => arr.length > 1);
+        filteredArr.forEach((interestArr) => {
+          interestArr.forEach((placeObj) => {
+            const imageRef = placeObj.photos;
+            const imageUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${imageRef}&key=${GOOGLE_MAPS_API_KEY}`;
+            placeObj.photoUrl = imageUrl;
+          });
+        });
         filteredRes = filteredArr;
       } else {
         response.forEach((interestArr) => {

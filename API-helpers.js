@@ -23,7 +23,7 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
   if (snapshotUrl === '/results') {
     newInterests = interests.slice(0, 5);
   } else {
-    newInterests = [interests[0], interests[12]];
+    newInterests = [interests[0], interests[1], interests[2]];
   }
   // console.log(newInterests);
   const usersNearbyPlaces = newInterests.map((interest) => {
@@ -38,7 +38,6 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
       .placesNearby(options)
       .asPromise()
       .then((response) => {
-        console.log(response);
         const filteredLocations = response.json.results.filter(place => place.photos);
         const locations = filteredLocations.map((place) => {
           const cityAndState = `${place.plus_code.compound_code.split(' ')[1]} ${place.plus_code.compound_code.split(' ')[2]} ${place.plus_code.compound_code.split(' ')[3]}`;
@@ -59,10 +58,8 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
           // console.log(responseFields.interest);
           const interestArr = [];
           responseFields.interest.split('_').forEach(((word) => {
-            console.log(word);
             interestArr.push(word[0].toUpperCase().concat(word.slice(1)));
           }));
-          console.log(interestArr);
           responseFields.interest = interestArr.join(' ');
           return responseFields;
         });
@@ -74,7 +71,6 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
         // res.status(500).send(err);
       });
   });
-  // console.log(usersNearbyPlaces);
   return usersNearbyPlaces;
 };
 
