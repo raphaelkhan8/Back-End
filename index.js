@@ -264,7 +264,7 @@ app.post('/likedInterest', (req, res) => {
       return models.Places.findOrCreate({
         where: {
           name: req.body.name,
-          status: req.body.status,
+          userId: req.body.userId
         },
         defaults: {
           coords: JSON.stringify(req.body.coordinates),
@@ -282,6 +282,22 @@ app.post('/likedInterest', (req, res) => {
           status: req.body.status,
         },
       });
+    })
+    .then(result => {
+      if(!result[1]) {
+        return models.Places.update({ status: req.body.status }, {
+          where: {
+            name: req.body.name,
+            userId: req.body.userId
+          }
+        })
+      } else {
+        res.status(200)
+      }
+     
+    })
+    .then(result => {
+      res.status(200)
     })
     .catch((err) => {
       console.error(err);
