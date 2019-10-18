@@ -264,7 +264,7 @@ app.post('/likedInterest', (req, res) => {
       return models.Places.findOrCreate({
         where: {
           name: req.body.name,
-          status: req.body.status,
+          userId: req.body.userId
         },
         defaults: {
           coords: JSON.stringify(req.body.coordinates),
@@ -282,6 +282,22 @@ app.post('/likedInterest', (req, res) => {
           status: req.body.status,
         },
       });
+    })
+    .then(result => {
+      if(!result[1]) {
+        return models.Places.update({ status: req.body.status }, {
+          where: {
+            name: req.body.name,
+            userId: req.body.userId
+          }
+        })
+      } else {
+        res.status(200)
+      }
+     
+    })
+    .then(result => {
+      res.status(200)
     })
     .catch((err) => {
       console.error(err);
@@ -329,14 +345,23 @@ app.post('/deleteInterest', (req, res) => {
 app.get('/getPlaceInfo', (req, res) => {
   let placeInfo = {};
   // console.log('req.query', req.query);
-  getPlaceInfo(req.query.placeId)
+  models.Places.findOne({
+    where: { placeId: req.query.placeId, userId: req.query.userId }
+  })
+    .then(result => {
+      if (result) placeInfo.status = result.status;
+      else placeInfo.status = false;
+    })
+    .then(result => {
+      return getPlaceInfo(req.query.placeId)
+    })  
     .then((response) => {
       const {
         // eslint-disable-next-line camelcase
         formatted_address, formatted_phone_number, icon, name, opening_hours, place_id, price_level,
         rating, url, website, photos, types, geometry,
       } = response.data.result;
-      placeInfo = {
+      Object.assign(placeInfo, {
         address: formatted_address,
         coordinates: geometry.location,
         phone: formatted_phone_number,
@@ -351,8 +376,8 @@ app.get('/getPlaceInfo', (req, res) => {
         GoogleMapsUrl: url || photos[0].html_attributions[0],
         website: website || 'No website available',
         // photo: photos[0].photo_reference || icon,
-      };
-      console.log(placeInfo);
+      });
+     
       const photoRef = photos[0].photo_reference;
       return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoRef}&key=${GOOGLE_MAPS_API_KEY}`;
     }).then((imgUrl) => {
