@@ -258,7 +258,7 @@ app.get('/getStats', (req, res) => {
 
 // likes an interest
 app.post('/likedInterest', (req, res) => {
-  // console.log(req.body);
+  
   const field = req.body.interest;
   models.UserInterests.findOne({
     where: { userId: req.body.userId },
@@ -271,8 +271,8 @@ app.post('/likedInterest', (req, res) => {
       const city = `${req.body.address.split(', ')[1]} ${req.body.address.split(', ')[2]}`;
       return models.Places.findOrCreate({
         where: {
-          name: req.body.name,
-          userId: req.body.userId,
+          placeId: req.body.placeId,
+          userId: req.body.userId
         },
         defaults: {
           coords: JSON.stringify(req.body.coordinates),
@@ -312,6 +312,18 @@ app.post('/likedInterest', (req, res) => {
     });
 });
 
+app.delete('/likedInterest', (req, res) => {
+  models.Places.destroy({
+    where: {
+      userId: req.query.userId,
+      placeId: req.query.placeId,
+    }
+  })
+  .then(result => {
+    res.status(202)
+  })
+  .catch(err => console.error(err))
+})
 // dislikes an interest
 app.post('/dislikedInterest', (req, res) => {
   const field = req.body.interest;
