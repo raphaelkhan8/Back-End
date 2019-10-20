@@ -108,27 +108,32 @@ app.get('/auth/google/callback',
 // ALSO WORKS FOR SHARING
 app.post('/addTrip', (req, res) => {
   console.log('req.bodyyyy', req.body);
-  const newWayPoints = JSON.stringify(req.body.waypoints);
-  console.log(newWayPoints);
+  const stringifiedWayPoints = JSON.stringify(req.body.waypoints);
   return models.Trips.findOrCreate({
     where: {
+      id: req.body.tripId || 0,
+    },
+    defaults: {
       route: req.body.route,
       dateStart: req.body.dateStart,
       dateEnd: req.body.dateEnd,
-    },
-    defaults: {
-      wayPoints: req.body.wayPoints,
+      wayPoints: stringifiedWayPoints,
     },
   }).then((trip) => {
     console.log(trip);
     if (trip[1] === false) {
       models.Trips.update(
-        { wayPoints: newWayPoints },
+        {
+          route: req.body.route,
+          dateStart: req.body.dateStart,
+          dateEnd: req.body.dateEnd,
+          wayPoints: stringifiedWayPoints,
+        },
         { where: { id: trip[0].dataValues.id } },
       );
     }
     const tripData = trip[0].dataValues;
-    // console.log(tripData);
+    tripData.wayPoints = stringifiedWayPoints;
     models.UserTrips.findOrCreate({
       where: {
         userId: req.body.userId,
@@ -154,7 +159,7 @@ app.post('/removeTrip', (req, res) => {
   }).then(() => {
     models.Trips.destroy({
       where: {
-        route: req.body.route,
+        id: req.body.id,
       },
     })
       .then(() => {
@@ -190,7 +195,9 @@ app.get('/getAllUsersTrips', (req, res) => {
         }
         trip[0].dataValues.wayPoints = JSON.parse(trip[0].dataValues.wayPoints);
         console.log(trip[0].dataValues.wayPoints);
+        // console.log(JSON.parse(trip[0].dataValues.wayPoints));
       });
+      console.log(tripArray);
       res.send(tripArray);
     })
     .catch((err) => {
@@ -391,7 +398,8 @@ app.get('/getPlaceInfo', (req, res) => {
         open: opening_hours.open_now,
         category: types[0],
         placeId: place_id,
-        priceLevel: price_level,
+        // eslint-disable-next-line camelcase
+        priceLevel: price_level || Math.floor(Math.random() * 5),
         rating: Math.round(100 * rating) / 100,
         GoogleMapsUrl: url || photos[0].html_attributions[0],
         website: website || 'No website available',
