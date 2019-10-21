@@ -16,15 +16,14 @@ const {
   getYelpPhotos,
   getPlaceInfo,
 } = require('./API-helpers');
-
-
+const path = require('path');
 const {
   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CLIENT_CALLBACK_URL, FRONTEND_BASE_URL,
   SESSION_SECRET, GOOGLE_MAPS_API_KEY,
 } = process.env;
 
 const app = express();
-
+app.use(express.static(path.join(__dirname, '../your-next-stop/dist/your-next-stop')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cors());
@@ -99,7 +98,9 @@ app.get('/auth/google/callback',
     res.redirect(`${FRONTEND_BASE_URL}/explore?id=${req.user.id}`);
   });
 
-
+app.get('/', (req, res) => {
+  res.status(200);
+})
 //* ****************************
 // TRIPS
 //* ****************************
