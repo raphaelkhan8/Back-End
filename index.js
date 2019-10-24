@@ -224,6 +224,7 @@ app.get('/getAllUsersTrips', (req, res) => {
 app.get('/getStats', (req, res) => {
   const statsObj = {};
   statsObj.cities = [];
+  statsObj.milesTraveled = 0;
   statsObj.numberOfCities = 0;
   const currently = new Date();
   models.Users.findAll({ where: { id: req.query.id } })
@@ -237,8 +238,9 @@ app.get('/getStats', (req, res) => {
       const previousTrips = tripArray.filter(trip => trip[0].dataValues.dateEnd < currently);
       // console.log(previousTrips);
       previousTrips.forEach((prevTrip) => {
-        console.log(prevTrip);
+        console.log('PREVIOUS trip', prevTrip);
         const citiesArr = prevTrip[0].route.split(' -> ');
+        statsObj.milesTraveled += prevTrip[0].milesTraveled;
         statsObj.cities.push(citiesArr);
       });
       statsObj.cities = _.uniq(_.flatten(statsObj.cities));
