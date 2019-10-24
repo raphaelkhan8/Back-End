@@ -291,6 +291,7 @@ app.post('/likedInterest', (req, res) => {
           userId: req.body.userId,
         },
         defaults: {
+          name: req.body.name,
           coords: JSON.stringify(req.body.coordinates),
           hours: req.body.hours.join() || null,
           city,
