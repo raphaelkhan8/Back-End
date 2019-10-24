@@ -492,7 +492,7 @@ app.get('/nearbyPlaces', (req, res) => {
       } else {
         response.forEach((interestArr) => {
           for (let i = 0; i < interestArr.length; i += 1) {
-            if (i > 1) break;
+            if (i > 2) break;
             filteredRes.push(interestArr[i]);
           }
         });
