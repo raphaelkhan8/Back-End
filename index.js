@@ -494,7 +494,7 @@ app.get('/nearbyPlaces', (req, res) => {
       } else {
         response.forEach((interestArr) => {
           for (let i = 0; i < interestArr.length; i += 1) {
-            if (i > 4) break;
+            if (i > 1) break;
             filteredRes.push(interestArr[i]);
           }
         });
@@ -577,7 +577,7 @@ app.get('/yelpAPI', (req, res) => {
   throttle(() => {
     getYelpPhotos(coordinates)
       .then((response) => {
-        // console.log(response);
+        console.log(response);
         const filteredRes = {
           photos: [response.data.image_url].concat(response.data.photos),
           name: response.data.name,

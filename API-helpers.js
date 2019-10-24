@@ -134,7 +134,14 @@ const getYelpPhotos = (coordinates) => {
   return axios.get('https://api.yelp.com/v3/businesses/search', { params: options, headers })
     .then((response) => {
       if (response.data.businesses[0] === undefined) {
-        console.log(response);
+        const emptyRes = {
+          data:{ 
+            img_url: 'http://www.moxmultisport.com/wp-content/uploads/no-image.jpg',
+            name: 'Something went wrong',
+            phone: 'unknown',
+          }
+        }
+        return Promise.resolve(emptyRes);
       }
       const { id } = response.data.businesses[0];
       return axios.get(`https://api.yelp.com/v3/businesses/${id}`, { headers });
