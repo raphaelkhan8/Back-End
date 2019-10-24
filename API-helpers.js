@@ -164,3 +164,4 @@ module.exports.getPositions = getPositions;
 module.exports.getNearbyPlaces = getNearbyPlaces;
 module.exports.getPlacePhoto = getPlacePhoto;
 module.exports.getPlaceInfo = getPlaceInfo;
+module.exports.getDistanceMatrix = getDistanceMatrix;
