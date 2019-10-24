@@ -17,9 +17,10 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
   // lng: -90.05025405587452
   // console.log(snapshotUrl);
   // console.log(location);
-  console.log(interests);
+  // console.log(interests);
   let newInterests;
-  if (snapshotUrl === '/results') {
+  if (typeof interests === 'string') newInterests = [interests];
+  else if (snapshotUrl === '/results') {
     newInterests = interests.slice(0, 5);
   } else {
     newInterests = [interests[0], interests[1], interests[2]];

@@ -506,6 +506,16 @@ app.get('/nearbyPlaces', (req, res) => {
     });
 });
 
+app.get('/nearbyPlacesByCategory', (req, res) => {
+  // console.log(req)
+  Promise.all(getNearbyPlaces(req.query.location, req.query.category))
+    .then(result => {
+      const filteredRes = result[0].slice(0, 3);
+      res.status(200).send(filteredRes);
+    })
+    .catch(err => console.error(err));
+});
+
 app.get('/routePositions', (req, res) => {
   getPositions(req.query)
     .then((coords) => {
