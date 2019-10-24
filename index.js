@@ -15,6 +15,7 @@ const {
   getAutocompleteAddress,
   getYelpPhotos,
   getPlaceInfo,
+  getDistanceMatrix,
 } = require('./API-helpers');
 
 
@@ -265,7 +266,6 @@ app.get('/getStats', (req, res) => {
 
 // likes an interest
 app.post('/likedInterest', (req, res) => {
-  
   const field = req.body.interest;
   models.UserInterests.findOne({
     where: { userId: req.body.userId },
@@ -279,7 +279,7 @@ app.post('/likedInterest', (req, res) => {
       return models.Places.findOrCreate({
         where: {
           placeId: req.body.placeId,
-          userId: req.body.userId
+          userId: req.body.userId,
         },
         defaults: {
           coords: JSON.stringify(req.body.coordinates),
@@ -298,21 +298,20 @@ app.post('/likedInterest', (req, res) => {
         },
       });
     })
-    .then(result => {
-      if(!result[1]) {
+    .then((result) => {
+      if (!result[1]) {
         return models.Places.update({ status: req.body.status }, {
           where: {
             name: req.body.name,
-            userId: req.body.userId
-          }
-        })
+            userId: req.body.userId,
+          },
+        });
       } else {
-        res.status(200)
+        res.status(200);
       }
-     
     })
-    .then(result => {
-      res.status(200)
+    .then((result) => {
+      res.status(200);
     })
     .catch((err) => {
       console.error(err);
@@ -324,13 +323,13 @@ app.delete('/likedInterest', (req, res) => {
     where: {
       userId: req.query.userId,
       placeId: req.query.placeId,
-    }
+    },
   })
-  .then(result => {
-    res.status(202)
-  })
-  .catch(err => console.error(err))
-})
+    .then((result) => {
+      res.status(202);
+    })
+    .catch(err => console.error(err));
+});
 // dislikes an interest
 app.post('/dislikedInterest', (req, res) => {
   const field = req.body.interest;
@@ -370,18 +369,16 @@ app.post('/deleteInterest', (req, res) => {
 
 // Get info for a place
 app.get('/getPlaceInfo', (req, res) => {
-  let placeInfo = {};
+  const placeInfo = {};
   // console.log('req.query', req.query);
   models.Places.findOne({
-    where: { placeId: req.query.placeId, userId: req.query.userId }
+    where: { placeId: req.query.placeId, userId: req.query.userId },
   })
-    .then(result => {
+    .then((result) => {
       if (result) placeInfo.status = result.status;
       else placeInfo.status = false;
     })
-    .then(result => {
-      return getPlaceInfo(req.query.placeId)
-    })  
+    .then((result) => getPlaceInfo(req.query.placeId))
     .then((response) => {
       const {
         // eslint-disable-next-line camelcase
@@ -405,10 +402,11 @@ app.get('/getPlaceInfo', (req, res) => {
         website: website || 'No website available',
         // photo: photos[0].photo_reference || icon,
       });
-     
+
       const photoRef = photos[0].photo_reference;
       return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoRef}&key=${GOOGLE_MAPS_API_KEY}`;
-    }).then((imgUrl) => {
+    })
+.then((imgUrl) => {
       console.log(imgUrl);
       // eslint-disable-next-line no-unused-expressions
       placeInfo.photo = imgUrl;
@@ -576,6 +574,23 @@ app.get('/yelpAPI', (req, res) => {
       })
       .catch(err => console.error(err));
   });
+});
+
+app.get('/eta', (req, res) => {
+  const query = {
+    origin: req.query.origin_addresses,
+    destination: req.query.destination_addresses,
+  };
+  getDistanceMatrix(query)
+    .then((response) => {
+      const eta = {
+        distance: response.data.rows[0].elements[0].distance.text,
+        duration: response.data.rows[0].elements[0].duration.text,
+      };
+      console.log(eta);
+      res.status(200).send(eta);
+    })
+    .catch(err => console.error(err));
 });
 
 const PORT = 4201;
