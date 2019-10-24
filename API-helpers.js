@@ -1,5 +1,4 @@
 const axios = require('axios');
-const throttledQueue = require('throttled-queue');
 
 const { GOOGLE_MAPS_API_KEY } = process.env;
 const { YELP_API_KEY } = process.env;
@@ -18,9 +17,10 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
   // lng: -90.05025405587452
   // console.log(snapshotUrl);
   // console.log(location);
-  console.log(interests);
+  // console.log(interests);
   let newInterests;
-  if (snapshotUrl === '/results') {
+  if (typeof interests === 'string') newInterests = [interests];
+  else if (snapshotUrl === '/results') {
     newInterests = interests.slice(0, 5);
   } else {
     newInterests = [interests[0], interests[1], interests[2]];
@@ -122,7 +122,6 @@ const getDistanceMatrix = (query) => {
 };
 
 const getYelpPhotos = (coordinates) => {
-  const throttle = throttledQueue(1, 200);
   const options = {
     latitude: coordinates.lat,
     longitude: coordinates.lng,
@@ -135,7 +134,14 @@ const getYelpPhotos = (coordinates) => {
   return axios.get('https://api.yelp.com/v3/businesses/search', { params: options, headers })
     .then((response) => {
       if (response.data.businesses[0] === undefined) {
-        console.log(response);
+        const emptyRes = {
+          data:{ 
+            img_url: 'http://www.moxmultisport.com/wp-content/uploads/no-image.jpg',
+            name: 'Something went wrong',
+            phone: 'unknown',
+          }
+        }
+        return Promise.resolve(emptyRes);
       }
       const { id } = response.data.businesses[0];
       return axios.get(`https://api.yelp.com/v3/businesses/${id}`, { headers });
@@ -158,17 +164,3 @@ module.exports.getPositions = getPositions;
 module.exports.getNearbyPlaces = getNearbyPlaces;
 module.exports.getPlacePhoto = getPlacePhoto;
 module.exports.getPlaceInfo = getPlaceInfo;
-module.exports.getDistanceMatrix = getDistanceMatrix;
-
-// const throttle = function(callback, limit) {
-//   var wait = false;                  // Initially, we're not waiting
-//   return function (arg) {               // We return a throttled function
-//       if (!wait) {                   // If we're not waiting
-//           callback.call(null, arg);           // Execute users function
-//           wait = true;               // Prevent future invocations
-//           setTimeout(function () {   // After a period of time
-//               wait = false;          // And allow future invocations
-//           }, limit);
-//       }
-//   }
-// }

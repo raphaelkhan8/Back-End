@@ -17,15 +17,14 @@ const {
   getPlaceInfo,
   getDistanceMatrix,
 } = require('./API-helpers');
-
-
+const path = require('path');
 const {
   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CLIENT_CALLBACK_URL, FRONTEND_BASE_URL,
   SESSION_SECRET, GOOGLE_MAPS_API_KEY,
 } = process.env;
 
 const app = express();
-
+app.use(express.static(path.join(__dirname, '../your-next-stop/dist/your-next-stop')));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cors());
@@ -100,7 +99,9 @@ app.get('/auth/google/callback',
     res.redirect(`${FRONTEND_BASE_URL}/explore?id=${req.user.id}`);
   });
 
-
+app.get('/', (req, res) => {
+  res.status(200);
+})
 //* ****************************
 // TRIPS
 //* ****************************
@@ -491,7 +492,7 @@ app.get('/nearbyPlaces', (req, res) => {
       } else {
         response.forEach((interestArr) => {
           for (let i = 0; i < interestArr.length; i += 1) {
-            if (i > 4) break;
+            if (i > 1) break;
             filteredRes.push(interestArr[i]);
           }
         });
@@ -501,6 +502,16 @@ app.get('/nearbyPlaces', (req, res) => {
     .catch((err) => {
       console.error(err);
     });
+});
+
+app.get('/nearbyPlacesByCategory', (req, res) => {
+  // console.log(req)
+  Promise.all(getNearbyPlaces(req.query.location, req.query.category))
+    .then(result => {
+      const filteredRes = result[0].slice(0, 3);
+      res.status(200).send(filteredRes);
+    })
+    .catch(err => console.error(err));
 });
 
 app.get('/routePositions', (req, res) => {
@@ -564,7 +575,7 @@ app.get('/yelpAPI', (req, res) => {
   throttle(() => {
     getYelpPhotos(coordinates)
       .then((response) => {
-        // console.log(response);
+        console.log(response);
         const filteredRes = {
           photos: [response.data.image_url].concat(response.data.photos),
           name: response.data.name,
