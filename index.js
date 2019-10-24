@@ -7,6 +7,8 @@ const passport = require('passport');
 const session = require('express-session');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const throttledQueue = require('throttled-queue');
+const path = require('path');
+
 const { models } = require('./database');
 const {
   getNearbyPlaces,
@@ -17,7 +19,7 @@ const {
   getPlaceInfo,
   getDistanceMatrix,
 } = require('./API-helpers');
-const path = require('path');
+
 const {
   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CLIENT_CALLBACK_URL, FRONTEND_BASE_URL,
   SESSION_SECRET, GOOGLE_MAPS_API_KEY,
@@ -111,6 +113,7 @@ app.get('/', (req, res) => {
 app.post('/addTrip', (req, res) => {
   console.log('req.bodyyyy', req.body);
   const stringifiedWayPoints = JSON.stringify(req.body.waypoints);
+  const milesTraveledNum = Number(req.body.milesTraveled.split(' ')[0].replace(/,/g, ''));
   return models.Trips.findOrCreate({
     where: {
       id: req.body.tripId || 0,
@@ -120,6 +123,7 @@ app.post('/addTrip', (req, res) => {
       dateStart: req.body.dateStart,
       dateEnd: req.body.dateEnd,
       wayPoints: stringifiedWayPoints,
+      milesTraveled: milesTraveledNum,
     },
   }).then((trip) => {
     console.log(trip);
@@ -130,6 +134,7 @@ app.post('/addTrip', (req, res) => {
           dateStart: req.body.dateStart,
           dateEnd: req.body.dateEnd,
           wayPoints: stringifiedWayPoints,
+          milesTraveled: milesTraveledNum,
         },
         { where: { id: trip[0].dataValues.id } },
       );
@@ -232,6 +237,7 @@ app.get('/getStats', (req, res) => {
       const previousTrips = tripArray.filter(trip => trip[0].dataValues.dateEnd < currently);
       // console.log(previousTrips);
       previousTrips.forEach((prevTrip) => {
+        console.log(prevTrip);
         const citiesArr = prevTrip[0].route.split(' -> ');
         statsObj.cities.push(citiesArr);
       });
