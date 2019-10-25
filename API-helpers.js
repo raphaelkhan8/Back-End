@@ -7,7 +7,7 @@ const googleMapsClient = require('@google/maps').createClient({
   key: GOOGLE_MAPS_API_KEY,
   Promise,
 });
-
+const { findPoints } = require('./pointsCalculator')
 // const decode = (encodedObj) => {
 
 // };
@@ -158,6 +158,45 @@ const getPlaceInfo = (placeId) => {
   });
 };
 
+const getLocationsNearPoints = (loc1Lat, loc1Lng, loc2Lat, loc2Lng, category) => {
+  const points = findPoints(loc1Lat, loc1Lng, loc2Lat, loc2Lng);
+  
+
+  const promisePoints = points.map(point => {
+    const options = {
+      // location: `29.96768435314543,-90.05025405587452`,
+      key: GOOGLE_MAPS_API_KEY,
+      location: `${point.lat},${point.lng}`,
+      input: category,
+      inputtype: 'textquery',
+      opennow: false,
+      radius: 50000,
+      fields: 'photos,place_id,formatted_address,geometry,name,rating',
+      locationbias: `circle:50000@${point.lat},${point.lng}`
+    };
+  
+    return axios.get(`https://maps.googleapis.com/maps/api/place/findplacefromtext/json`, {
+      params: options,
+    })
+      .then(places => {
+        console.log(places)
+        const place = places.data.candidates[0]
+        
+          const responseFields = {
+            clicked: false,
+            name: place.name,
+            placeId: place.place_id,
+            lat: place.geometry.location.lat,
+            lng: place.geometry.location.lng,
+            address: place.formatted_address,
+            rating: place.rating,
+            interest: options.input,
+          };
+          return Promise.resolve(responseFields);
+      })
+  })
+  return Promise.all(promisePoints);
+}
 module.exports.getYelpPhotos = getYelpPhotos;
 module.exports.getAutocompleteAddress = getAutocompleteAddress;
 module.exports.getPositions = getPositions;
@@ -165,3 +204,4 @@ module.exports.getNearbyPlaces = getNearbyPlaces;
 module.exports.getPlacePhoto = getPlacePhoto;
 module.exports.getPlaceInfo = getPlaceInfo;
 module.exports.getDistanceMatrix = getDistanceMatrix;
+module.exports.getLocationsNearPoints = getLocationsNearPoints;

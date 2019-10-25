@@ -19,6 +19,7 @@ const {
   getPlaceInfo,
   getDistanceMatrix,
 } = require('./API-helpers');
+const { getLocationsNearPoints } = require('./API-helpers');
 
 const {
   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CLIENT_CALLBACK_URL, FRONTEND_BASE_URL,
@@ -611,6 +612,20 @@ app.get('/eta', (req, res) => {
     })
     .catch(err => console.error(err));
 });
+
+app.get('/routeSuggestions', (req, res) => {
+  const { loc1, loc2, category } = req.query;
+  const [ loc1Lat, loc1Lng, loc2Lat, loc2Lng ] = [...loc1.split(','),...loc2.split(',')].map(num => Number(num));
+  
+  getLocationsNearPoints(loc1Lat, loc1Lng, loc2Lat, loc2Lng, req.query.category)
+    .then(result => {
+      res.status(200).send(result);
+    })
+    .catch(err => {
+      res.status(500)
+      console.error(err)
+    })
+})
 
 const PORT = 4201;
 app.listen(PORT, () => {
