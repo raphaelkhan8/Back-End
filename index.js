@@ -103,7 +103,7 @@ app.get('/auth/google/callback',
 
 app.get('/', (req, res) => {
   res.status(200);
-})
+});
 //* ****************************
 // TRIPS
 //* ****************************
@@ -315,9 +315,8 @@ app.post('/likedInterest', (req, res) => {
             userId: req.body.userId,
           },
         });
-      } else {
-        res.status(200);
       }
+      res.status(200);
     })
     .then((result) => {
       res.status(200);
@@ -387,7 +386,7 @@ app.get('/getPlaceInfo', (req, res) => {
       if (result) placeInfo.status = result.status;
       else placeInfo.status = false;
     })
-    .then((result) => getPlaceInfo(req.query.placeId))
+    .then(result => getPlaceInfo(req.query.placeId))
     .then((response) => {
       const {
         // eslint-disable-next-line camelcase
@@ -415,7 +414,7 @@ app.get('/getPlaceInfo', (req, res) => {
       const photoRef = photos[0].photo_reference;
       return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoRef}&key=${GOOGLE_MAPS_API_KEY}`;
     })
-.then((imgUrl) => {
+    .then((imgUrl) => {
       console.log(imgUrl);
       // eslint-disable-next-line no-unused-expressions
       placeInfo.photo = imgUrl;
@@ -515,7 +514,7 @@ app.get('/nearbyPlaces', (req, res) => {
 app.get('/nearbyPlacesByCategory', (req, res) => {
   // console.log(req)
   Promise.all(getNearbyPlaces(req.query.location, req.query.category))
-    .then(result => {
+    .then((result) => {
       const filteredRes = result[0].slice(0, 3);
       res.status(200).send(filteredRes);
     })
