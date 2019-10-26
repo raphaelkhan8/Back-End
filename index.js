@@ -157,7 +157,6 @@ app.post('/addTrip', (req, res) => {
 
 // remove a trip from the database
 app.post('/removeTrip', (req, res) => {
-  // console.log('REQBODDY', req.body);
   // console.log('REQBODDY', req.body.id);
   models.UserTrips.destroy({
     where: {
@@ -170,10 +169,11 @@ app.post('/removeTrip', (req, res) => {
       },
     })
       .then(() => {
-        res.send(201);
+        res.send({ deleted: true });
       });
   }).catch((err) => {
     console.error(err);
+    res.status(500).send(err);
   });
 });
 
