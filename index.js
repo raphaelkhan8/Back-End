@@ -291,6 +291,7 @@ app.post('/likedInterest', (req, res) => {
           userId: req.body.userId,
         },
         defaults: {
+          name: req.body.name,
           coords: JSON.stringify(req.body.coordinates),
           hours: req.body.hours.join() || null,
           city,
@@ -598,15 +599,12 @@ app.get('/eta', (req, res) => {
   const query = {
     origin: req.query.origin_addresses,
     destination: req.query.destination_addresses,
+    waypoints: req.query.waypoints,
   };
   getDistanceMatrix(query)
     .then((response) => {
-      const eta = {
-        distance: response.data.rows[0].elements[0].distance.text,
-        duration: response.data.rows[0].elements[0].duration.text,
-      };
-      console.log(eta);
-      res.status(200).send(eta);
+      // console.log(response);
+      res.status(200).send(response);
     })
     .catch(err => console.error(err));
 });
