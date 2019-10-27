@@ -294,6 +294,7 @@ const findPointsByDirections = (origin, destination, waypoints, category) => {
             address: place.vicinity,
             rating: place.rating,
             interest: category,
+            zoomLevel: 0,
           };
 
         }).slice(0, 10).sort((a, b) => b.rating - a.rating)

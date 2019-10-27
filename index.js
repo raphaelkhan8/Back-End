@@ -625,12 +625,26 @@ app.get('/routeSuggestions', (req, res) => {
 })
 
 app.get('/routeDirectionsSuggestions', (req, res) => {
-  console.log(req)
+  // console.log(req)
   const { loc1, loc2, waypoints, category } = req.query;
   findPointsByDirections(loc1, loc2, waypoints, category)
     .then(suggestions => {
       const formattedSuggestions = [];
-      suggestions.forEach(locations => locations.forEach(location => formattedSuggestions.push(location)))
+      suggestions.forEach(locations => locations.forEach((location, index) => {
+        switch(index) {
+          case 0: location.zoomLevel = 1; break;
+          case 1: location.zoomLevel = 6; break;
+          case 2: location.zoomLevel = 6; break;
+          case 3: location.zoomLevel = 7; break;
+          case 4: location.zoomLevel = 7; break;
+          case 5: location.zoomLevel = 8; break;
+          case 6: location.zoomLevel = 8; break;
+          case 7: location.zoomLevel = 9; break;
+          case 8: location.zoomLevel = 9; break;
+          default: location.zoomLevel = 10; break;
+        }
+        formattedSuggestions.push(location)
+      }))
       res.status(200).send(formattedSuggestions)
     })
     .catch(err => {
