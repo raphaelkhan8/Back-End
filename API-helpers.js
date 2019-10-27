@@ -283,7 +283,23 @@ const findPointsByDirections = (origin, destination, waypoints, category) => {
       return Promise.all(searchPromises);
     })
     .then(routeSuggestions => {
-      console.log(routeSuggestions)
+      const filteredSuggestions = routeSuggestions.map(places => {
+        return places.json.results.map(place => {
+          return {
+            clicked: false,
+            name: place.name,
+            placeId: place.place_id,
+            lat: place.geometry.location.lat,
+            lng: place.geometry.location.lng,
+            address: place.vicinity,
+            rating: place.rating,
+            interest: category,
+          };
+
+        }).slice(0, 10).sort((a, b) => b.rating - a.rating)
+      })
+      console.log(filteredSuggestions)
+      return Promise.resolve(filteredSuggestions);
     })
     
 }

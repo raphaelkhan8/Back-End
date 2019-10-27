@@ -619,8 +619,8 @@ app.get('/routeSuggestions', (req, res) => {
       res.status(200).send(result);
     })
     .catch(err => {
-      res.status(500)
       console.error(err)
+      res.status(500)
     })
 })
 
@@ -628,6 +628,15 @@ app.get('/routeDirectionsSuggestions', (req, res) => {
   console.log(req)
   const { loc1, loc2, waypoints, category } = req.query;
   findPointsByDirections(loc1, loc2, waypoints, category)
+    .then(suggestions => {
+      const formattedSuggestions = [];
+      suggestions.forEach(locations => locations.forEach(location => formattedSuggestions.push(location)))
+      res.status(200).send(formattedSuggestions)
+    })
+    .catch(err => {
+      console.error(err)
+      res.status(500)
+    })
 })
 const PORT = 4201;
 app.listen(PORT, () => {
