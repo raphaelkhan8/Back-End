@@ -40,5 +40,6 @@
     return locations;
   }
 
+ 
   module.exports.middlePoint = middlePoint;
   module.exports.findPoints = findPoints;

@@ -2,7 +2,7 @@ const axios = require('axios');
 
 const { GOOGLE_MAPS_API_KEY } = process.env;
 const { YELP_API_KEY } = process.env;
-
+const { util } = require('@google/maps');
 const googleMapsClient = require('@google/maps').createClient({
   key: GOOGLE_MAPS_API_KEY,
   Promise,
@@ -245,6 +245,50 @@ const getLocationsNearPoints = (loc1Lat, loc1Lng, loc2Lat, loc2Lng, category) =>
   })
   return Promise.all(promisePoints);
 }
+
+const findPointsByDirections = (origin, destination, waypoints, category) => {
+  const query = { origin, destination };
+  if (waypoints) query.waypoints = waypoints;
+  let routeInfo;
+
+  return googleMapsClient.directions(query).asPromise()
+    .then(result => {
+      const distance = Number(result.json.routes[0].legs[0].distance.text.slice(0, -3));
+      let divisor;
+      if (distance > 500) divisor = 10;
+      else divisor = Math.round(distance / 50);
+
+      const polyline = result.json.routes[0].overview_polyline.points;
+      const decodedPolyline = util.decodePath(polyline);
+      const loopIncrement = Math.round(decodedPolyline.length / divisor);
+      const searchPoints = [];
+      for (let i = loopIncrement; i < decodedPolyline.length; i += loopIncrement) {
+        searchPoints.push(decodedPolyline[i]);
+      }
+      routeInfo = {
+        distance: result.json.routes[0].legs[0].distance.text,
+        duration: result.json.routes[0].legs[0].duration.text,
+        searchPoints
+      }
+      const searchPromises = searchPoints.map(point => {
+        const location = `${point.lat},${point.lng}`
+        const options = {
+          location,
+          keyword: category,
+          opennow: false,
+          radius: 50000,
+        };
+        return googleMapsClient.placesNearby(options).asPromise();
+      })
+      return Promise.all(searchPromises);
+    })
+    .then(routeSuggestions => {
+      console.log(routeSuggestions)
+    })
+    
+}
+
+module.exports.findPointsByDirections = findPointsByDirections;
 module.exports.getYelpPhotos = getYelpPhotos;
 module.exports.getAutocompleteAddress = getAutocompleteAddress;
 module.exports.getPositions = getPositions;

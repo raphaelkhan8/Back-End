@@ -19,7 +19,7 @@ const {
   getPlaceInfo,
   getDistanceMatrix,
 } = require('./API-helpers');
-const { getLocationsNearPoints } = require('./API-helpers');
+const { getLocationsNearPoints, findPointsByDirections } = require('./API-helpers');
 
 const {
   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CLIENT_CALLBACK_URL, FRONTEND_BASE_URL,
@@ -624,6 +624,11 @@ app.get('/routeSuggestions', (req, res) => {
     })
 })
 
+app.get('/routeDirectionsSuggestions', (req, res) => {
+  console.log(req)
+  const { loc1, loc2, waypoints, category } = req.query;
+  findPointsByDirections(loc1, loc2, waypoints, category)
+})
 const PORT = 4201;
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
