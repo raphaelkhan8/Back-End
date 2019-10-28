@@ -19,6 +19,7 @@ const {
   getPlaceInfo,
   getDistanceMatrix,
 } = require('./API-helpers');
+const { getLocationsNearPoints, findPointsByDirections } = require('./API-helpers');
 
 const {
   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_CLIENT_CALLBACK_URL, FRONTEND_BASE_URL,
@@ -49,7 +50,7 @@ passport.use(new GoogleStrategy({
   callbackURL: GOOGLE_CLIENT_CALLBACK_URL,
 },
 ((accessToken, refreshToken, profile, cb) => {
-  console.log('!!!!!THISISPROFILE!!!!', profile);
+
   models.Users.findOrCreate({
     where: { googleId: profile.id },
     defaults: { username: profile.displayName },
@@ -80,7 +81,7 @@ app.use((req, res, next) => {
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
   } else {
-    // console.log(`${req.ip} ${req.method} ${req.url}`);
+
     next();
   }
 });
@@ -97,7 +98,7 @@ app.get('/auth/google/callback',
   passport.authenticate('google', { failureRedirect: `${FRONTEND_BASE_URL}` }),
   (req, res) => {
     // Successful authentication, redirect to explore page.
-    console.log('REQ.USER!!!!!', req.user);
+
     res.redirect(`${FRONTEND_BASE_URL}/explore?id=${req.user.id}`);
   });
 
@@ -111,7 +112,7 @@ app.get('/', (req, res) => {
 // add a trip to the database
 // ALSO WORKS FOR SHARING
 app.post('/addTrip', (req, res) => {
-  console.log('req.bodyyyy', req.body);
+
   const stringifiedWayPoints = JSON.stringify(req.body.waypoints);
   const milesTraveledNum = Number(req.body.milesTraveled.split(' ')[0].replace(/,/g, ''));
   return models.Trips.findOrCreate({
@@ -126,7 +127,7 @@ app.post('/addTrip', (req, res) => {
       milesTraveled: milesTraveledNum,
     },
   }).then((trip) => {
-    console.log(trip);
+
     if (trip[1] === false) {
       models.Trips.update(
         {
@@ -157,7 +158,6 @@ app.post('/addTrip', (req, res) => {
 
 // remove a trip from the database
 app.post('/removeTrip', (req, res) => {
-  // console.log('REQBODDY', req.body.id);
   models.UserTrips.destroy({
     where: {
       tripId: req.body.id,
@@ -178,16 +178,15 @@ app.post('/removeTrip', (req, res) => {
 });
 
 // gets all users past, current, and previous trips
-// gets all users past, current, and previous trips
-// gets all users past, current, and previous trips
+
 app.get('/getAllUsersTrips', (req, res) => {
-  // console.log('req.parammmmm', req.query);
+
   models.Users.findAll({ where: { id: req.query.id } })
     .then(user =>
-      // console.log(user);
+
       models.UserTrips.findAll({ where: { userId: user[0].id } }))
     .then(tripId => Promise.all(tripId.map((trip) => {
-      console.log('DISDATRIPIDDD', trip);
+  
       return models.Trips.findAll({ where: { id: trip.tripId } });
     })))
     .then((tripArray) => {
@@ -201,14 +200,13 @@ app.get('/getAllUsersTrips', (req, res) => {
           trip[0].dataValues.status = 'previous';
         }
         trip[0].dataValues.wayPoints = JSON.parse(trip[0].dataValues.wayPoints);
-        console.log(trip[0].dataValues.wayPoints);
-        // console.log(JSON.parse(trip[0].dataValues.wayPoints));
+ 
       });
-      console.log(tripArray);
-      res.send(tripArray);
+  
+      res.status(200).send(tripArray);
     })
     .catch((err) => {
-      res.status(400).send(err);
+      res.status(500).send(err);
     });
 });
 
@@ -234,11 +232,10 @@ app.get('/getStats', (req, res) => {
       { id: trip.tripId },
     }))))
     .then((tripArray) => {
-      // console.log(tripArray);
+
       const previousTrips = tripArray.filter(trip => trip[0].dataValues.dateEnd < currently);
-      // console.log(previousTrips);
+
       previousTrips.forEach((prevTrip) => {
-        console.log('PREVIOUS trip', prevTrip);
         const citiesArr = prevTrip[0].route.split(' -> ');
         statsObj.milesTraveled += prevTrip[0].milesTraveled;
         statsObj.cities.push(citiesArr);
@@ -246,7 +243,7 @@ app.get('/getStats', (req, res) => {
       statsObj.cities = _.uniq(_.flatten(statsObj.cities));
       statsObj.numberOfCities = statsObj.cities.length;
       statsObj.numberOfTrips = previousTrips.length;
-      // console.log('STATS', statsObj);
+
     })
     .then(() => models.UserInterests.findAll({ where: { userId: req.query.id } }))
     .then((interests) => {
@@ -379,7 +376,7 @@ app.post('/deleteInterest', (req, res) => {
 // Get info for a place
 app.get('/getPlaceInfo', (req, res) => {
   const placeInfo = {};
-  // console.log('req.query', req.query);
+
   models.Places.findOne({
     where: { placeId: req.query.placeId, userId: req.query.userId },
   })
@@ -416,7 +413,7 @@ app.get('/getPlaceInfo', (req, res) => {
       return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoRef}&key=${GOOGLE_MAPS_API_KEY}`;
     })
     .then((imgUrl) => {
-      console.log(imgUrl);
+
       // eslint-disable-next-line no-unused-expressions
       placeInfo.photo = imgUrl;
       res.send(placeInfo);
@@ -441,7 +438,7 @@ app.post('/saveForLater', (req, res) => models.Places.findOrCreate({
 
 //  GET a user's places for Places page
 app.get('/getLikedAndSavedForLater', (req, res) => {
-  // console.log('req.parammmmm', req.query);
+
   const placesObj = {};
   placesObj.savedPlaces = [];
   placesObj.likedPlaces = [];
@@ -513,7 +510,7 @@ app.get('/nearbyPlaces', (req, res) => {
 });
 
 app.get('/nearbyPlacesByCategory', (req, res) => {
-  // console.log(req)
+
   Promise.all(getNearbyPlaces(req.query.location, req.query.category))
     .then((result) => {
       const filteredRes = result[0].slice(0, 3);
@@ -525,7 +522,6 @@ app.get('/nearbyPlacesByCategory', (req, res) => {
 app.get('/routePositions', (req, res) => {
   getPositions(req.query)
     .then((coords) => {
-      // console.log(coords);
       const filtered = coords.map((location, index) => {
         if (index < 2) {
           return {
@@ -548,7 +544,7 @@ app.get('/routePositions', (req, res) => {
           },
         };
       });
-      // console.log(filtered);
+
       res.status(200).send(filtered);
     })
     .catch(err => console.error(err));
@@ -557,7 +553,6 @@ app.get('/routePositions', (req, res) => {
 app.get('/placePhoto', (req, res) => {
   getPlacePhoto(req.query)
     .then((photo) => {
-      // console.log(photo);
       res.set('Content-Type', photo.headers['content-type']);
       res.status(200).send(Buffer.from(photo.data, 'base64'));
     })
@@ -583,7 +578,6 @@ app.get('/yelpAPI', (req, res) => {
   throttle(() => {
     getYelpPhotos(coordinates)
       .then((response) => {
-        console.log(response);
         const filteredRes = {
           photos: [response.data.image_url].concat(response.data.photos),
           name: response.data.name,
@@ -603,12 +597,53 @@ app.get('/eta', (req, res) => {
   };
   getDistanceMatrix(query)
     .then((response) => {
-      // console.log(response);
       res.status(200).send(response);
     })
     .catch(err => console.error(err));
 });
 
+app.get('/routeSuggestions', (req, res) => {
+  const { loc1, loc2, category } = req.query;
+  const [ loc1Lat, loc1Lng, loc2Lat, loc2Lng ] = [...loc1.split(','),...loc2.split(',')].map(num => Number(num));
+  
+  getLocationsNearPoints(loc1Lat, loc1Lng, loc2Lat, loc2Lng, req.query.category)
+    .then(result => {
+      res.status(200).send(result);
+    })
+    .catch(err => {
+      console.error(err)
+      res.status(500)
+    })
+})
+
+app.get('/routeDirectionsSuggestions', (req, res) => {
+
+  const { loc1, loc2, waypoints, category } = req.query;
+  findPointsByDirections(loc1, loc2, waypoints, category)
+    .then(suggestions => {
+      const formattedSuggestions = [];
+      suggestions.forEach(locations => locations.forEach((location, index) => {
+        switch(index) {
+          case 0: location.zoomLevel = 1; break;
+          case 1: location.zoomLevel = 6; break;
+          case 2: location.zoomLevel = 6; break;
+          case 3: location.zoomLevel = 7; break;
+          case 4: location.zoomLevel = 7; break;
+          case 5: location.zoomLevel = 8; break;
+          case 6: location.zoomLevel = 8; break;
+          case 7: location.zoomLevel = 9; break;
+          case 8: location.zoomLevel = 9; break;
+          default: location.zoomLevel = 10; break;
+        }
+        formattedSuggestions.push(location)
+      }))
+      res.status(200).send(formattedSuggestions)
+    })
+    .catch(err => {
+      console.error(err)
+      res.status(500)
+    })
+})
 const PORT = 4201;
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);

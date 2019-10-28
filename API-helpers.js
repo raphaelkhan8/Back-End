@@ -2,22 +2,15 @@ const axios = require('axios');
 
 const { GOOGLE_MAPS_API_KEY } = process.env;
 const { YELP_API_KEY } = process.env;
-
+const { util } = require('@google/maps');
 const googleMapsClient = require('@google/maps').createClient({
   key: GOOGLE_MAPS_API_KEY,
   Promise,
 });
-
-// const decode = (encodedObj) => {
-
-// };
+const { findPoints } = require('./pointsCalculator')
 
 const getNearbyPlaces = (location, interests, snapshotUrl) => {
-  // lat: 29.96768435314543,
-  // lng: -90.05025405587452
-  // console.log(snapshotUrl);
-  // console.log(location);
-  // console.log(interests);
+  
   let newInterests;
   if (typeof interests === 'string') newInterests = [interests];
   else if (snapshotUrl === '/results') {
@@ -25,7 +18,7 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
   } else {
     newInterests = [interests[0], interests[1], interests[2]];
   }
-  // console.log(newInterests);
+
   const usersNearbyPlaces = newInterests.map((interest) => {
     const options = {
       // location: `29.96768435314543,-90.05025405587452`,
@@ -55,7 +48,7 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
             interest: options.keyword,
             photos: place.photos[0].photo_reference,
           };
-          // console.log(responseFields.interest);
+ 
           const interestArr = [];
           responseFields.interest.split('_').forEach(((word) => {
             interestArr.push(word[0].toUpperCase().concat(word.slice(1)));
@@ -64,11 +57,11 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
           return responseFields;
         });
         return locations;
-        // res.status(200).send(locations.slice(0, 5));
+   
       })
       .catch((err) => {
-        console.warn(err);
-        // res.status(500).send(err);
+        console.error(err);
+        res.status(500);
       });
   });
   return usersNearbyPlaces;
@@ -118,7 +111,6 @@ const getAutocompleteAddress = (query) => {
 const getDistanceMatrix = (query) => {
   const { destination, origin, waypoints } = query;
   const newWaypoints = waypoints.trim().split(',').filter(waypoint => waypoint);
-  // console.log('wayppppp', newWaypoints);
   if (!newWaypoints.length) {
     return axios.get(`https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=${origin}&destinations=${destination}&key=${GOOGLE_MAPS_API_KEY}`)
       .then(response => ({
@@ -166,7 +158,8 @@ const getDistanceMatrix = (query) => {
     const duration = `${dayDuration} ${hourDuration} ${minsDuration}`;
     const distance = `${addAlltheElements(etas.map(eta => Number(eta.distance.slice(0, eta.distance.length - 3).replace(/,/g, ''))))} mi`;
     return { duration, distance };
-  }).catch(err => console.log('errrrrrrrcat', err));
+  })
+  .catch(err => console.error(err));
 };
 
 const getYelpPhotos = (coordinates) => {
@@ -206,6 +199,112 @@ const getPlaceInfo = (placeId) => {
   });
 };
 
+const getLocationsNearPoints = (loc1Lat, loc1Lng, loc2Lat, loc2Lng, category) => {
+  const points = findPoints(loc1Lat, loc1Lng, loc2Lat, loc2Lng);
+  
+
+  const promisePoints = points.map(point => {
+    const options = {
+      // location: `29.96768435314543,-90.05025405587452`,
+      key: GOOGLE_MAPS_API_KEY,
+      location: `${point.lat},${point.lng}`,
+      input: category,
+      inputtype: 'textquery',
+      opennow: false,
+      radius: 50000,
+      fields: 'photos,place_id,formatted_address,geometry,name,rating',
+      locationbias: `circle:50000@${point.lat},${point.lng}`
+    };
+  
+    return axios.get(`https://maps.googleapis.com/maps/api/place/findplacefromtext/json`, {
+      params: options,
+    })
+      .then(places => {
+      
+        const place = places.data.candidates[0]
+        
+          const responseFields = {
+            clicked: false,
+            name: place.name,
+            placeId: place.place_id,
+            lat: place.geometry.location.lat,
+            lng: place.geometry.location.lng,
+            address: place.formatted_address,
+            rating: place.rating,
+            interest: options.input,
+          };
+          return Promise.resolve(responseFields);
+      })
+  })
+  return Promise.all(promisePoints);
+}
+
+const findPointsByDirections = (origin, destination, waypoints, category) => {
+  const query = { origin, destination };
+  if (waypoints) {
+    query.waypoints = waypoints.split(';').filter(a => a)
+  }
+  let routeInfo;
+
+  return googleMapsClient.directions(query).asPromise()
+    .then(result => {
+      let distanceString = '';
+      for (let letter of result.json.routes[0].legs[0].distance.text) {
+        if (Number(letter) > -1) distanceString += letter;
+      }
+      const distance = Number(distanceString);
+      let divisor;
+      // if (distance > 500) divisor = 10;
+      // else divisor = Math.round(distance / 50);
+      divisor = Math.round(distance / 50);
+
+      const polyline = result.json.routes[0].overview_polyline.points;
+      const decodedPolyline = util.decodePath(polyline);
+      const loopIncrement = Math.round(decodedPolyline.length / divisor);
+      const searchPoints = [];
+      for (let i = loopIncrement; i < decodedPolyline.length; i += loopIncrement) {
+        searchPoints.push(decodedPolyline[i]);
+      }
+      routeInfo = {
+        distance: result.json.routes[0].legs[0].distance.text,
+        duration: result.json.routes[0].legs[0].duration.text,
+        searchPoints
+      }
+      const searchPromises = searchPoints.map(point => {
+        const location = `${point.lat},${point.lng}`
+        const options = {
+          location,
+          keyword: category,
+          opennow: false,
+          radius: 50000,
+        };
+        return googleMapsClient.placesNearby(options).asPromise();
+      })
+      return Promise.all(searchPromises);
+    })
+    .then(routeSuggestions => {
+      const filteredSuggestions = routeSuggestions.map(places => {
+        return places.json.results.map(place => {
+          return {
+            clicked: false,
+            name: place.name,
+            placeId: place.place_id,
+            lat: place.geometry.location.lat,
+            lng: place.geometry.location.lng,
+            address: place.vicinity,
+            rating: place.rating,
+            interest: category,
+            zoomLevel: 0,
+          };
+
+        }).slice(0, 10).sort((a, b) => b.rating - a.rating)
+      })
+      return Promise.resolve(filteredSuggestions);
+    })
+    
+}
+
+module.exports.findPointsByDirections = findPointsByDirections;
 module.exports.getYelpPhotos = getYelpPhotos;
 module.exports.getAutocompleteAddress = getAutocompleteAddress;
 module.exports.getPositions = getPositions;
@@ -213,3 +312,4 @@ module.exports.getNearbyPlaces = getNearbyPlaces;
 module.exports.getPlacePhoto = getPlacePhoto;
 module.exports.getPlaceInfo = getPlaceInfo;
 module.exports.getDistanceMatrix = getDistanceMatrix;
+module.exports.getLocationsNearPoints = getLocationsNearPoints;
