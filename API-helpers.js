@@ -8,16 +8,9 @@ const googleMapsClient = require('@google/maps').createClient({
   Promise,
 });
 const { findPoints } = require('./pointsCalculator')
-// const decode = (encodedObj) => {
-
-// };
 
 const getNearbyPlaces = (location, interests, snapshotUrl) => {
-  // lat: 29.96768435314543,
-  // lng: -90.05025405587452
-  // console.log(snapshotUrl);
-  // console.log(location);
-  // console.log(interests);
+  
   let newInterests;
   if (typeof interests === 'string') newInterests = [interests];
   else if (snapshotUrl === '/results') {
@@ -25,7 +18,7 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
   } else {
     newInterests = [interests[0], interests[1], interests[2]];
   }
-  // console.log(newInterests);
+
   const usersNearbyPlaces = newInterests.map((interest) => {
     const options = {
       // location: `29.96768435314543,-90.05025405587452`,
@@ -55,7 +48,7 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
             interest: options.keyword,
             photos: place.photos[0].photo_reference,
           };
-          // console.log(responseFields.interest);
+ 
           const interestArr = [];
           responseFields.interest.split('_').forEach(((word) => {
             interestArr.push(word[0].toUpperCase().concat(word.slice(1)));
@@ -64,11 +57,11 @@ const getNearbyPlaces = (location, interests, snapshotUrl) => {
           return responseFields;
         });
         return locations;
-        // res.status(200).send(locations.slice(0, 5));
+   
       })
       .catch((err) => {
-        console.warn(err);
-        // res.status(500).send(err);
+        console.error(err);
+        res.status(500);
       });
   });
   return usersNearbyPlaces;
@@ -118,7 +111,6 @@ const getAutocompleteAddress = (query) => {
 const getDistanceMatrix = (query) => {
   const { destination, origin, waypoints } = query;
   const newWaypoints = waypoints.trim().split(',').filter(waypoint => waypoint);
-  // console.log('wayppppp', newWaypoints);
   if (!newWaypoints.length) {
     return axios.get(`https://maps.googleapis.com/maps/api/distancematrix/json?units=imperial&origins=${origin}&destinations=${destination}&key=${GOOGLE_MAPS_API_KEY}`)
       .then(response => ({
@@ -166,7 +158,8 @@ const getDistanceMatrix = (query) => {
     const duration = `${dayDuration} ${hourDuration} ${minsDuration}`;
     const distance = `${addAlltheElements(etas.map(eta => Number(eta.distance.slice(0, eta.distance.length - 3).replace(/,/g, ''))))} mi`;
     return { duration, distance };
-  }).catch(err => console.log('errrrrrrrcat', err));
+  })
+  .catch(err => console.error(err));
 };
 
 const getYelpPhotos = (coordinates) => {
@@ -227,7 +220,7 @@ const getLocationsNearPoints = (loc1Lat, loc1Lng, loc2Lat, loc2Lng, category) =>
       params: options,
     })
       .then(places => {
-        console.log(places)
+      
         const place = places.data.candidates[0]
         
           const responseFields = {
@@ -261,8 +254,9 @@ const findPointsByDirections = (origin, destination, waypoints, category) => {
       }
       const distance = Number(distanceString);
       let divisor;
-      if (distance > 500) divisor = 10;
-      else divisor = Math.round(distance / 50);
+      // if (distance > 500) divisor = 10;
+      // else divisor = Math.round(distance / 50);
+      divisor = Math.round(distance / 50);
 
       const polyline = result.json.routes[0].overview_polyline.points;
       const decodedPolyline = util.decodePath(polyline);
@@ -305,7 +299,6 @@ const findPointsByDirections = (origin, destination, waypoints, category) => {
 
         }).slice(0, 10).sort((a, b) => b.rating - a.rating)
       })
-      console.log(filteredSuggestions)
       return Promise.resolve(filteredSuggestions);
     })
     
