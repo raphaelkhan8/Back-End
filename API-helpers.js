@@ -248,12 +248,18 @@ const getLocationsNearPoints = (loc1Lat, loc1Lng, loc2Lat, loc2Lng, category) =>
 
 const findPointsByDirections = (origin, destination, waypoints, category) => {
   const query = { origin, destination };
-  if (waypoints) query.waypoints = waypoints;
+  if (waypoints) {
+    query.waypoints = waypoints.split(';').filter(a => a)
+  }
   let routeInfo;
 
   return googleMapsClient.directions(query).asPromise()
     .then(result => {
-      const distance = Number(result.json.routes[0].legs[0].distance.text.slice(0, -3));
+      let distanceString = '';
+      for (let letter of result.json.routes[0].legs[0].distance.text) {
+        if (Number(letter) > -1) distanceString += letter;
+      }
+      const distance = Number(distanceString);
       let divisor;
       if (distance > 500) divisor = 10;
       else divisor = Math.round(distance / 50);
