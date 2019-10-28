@@ -158,11 +158,6 @@ app.post('/addTrip', (req, res) => {
 
 // remove a trip from the database
 app.post('/removeTrip', (req, res) => {
-<<<<<<< HEAD
-
-=======
-  // console.log('REQBODDY', req.body.id);
->>>>>>> 6d03180c8a03ddff0f3ea56c357d0b011f24ac86
   models.UserTrips.destroy({
     where: {
       tripId: req.body.id,
