@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 require('dotenv').config();
 
 const express = require('express');
@@ -50,7 +51,6 @@ passport.use(new GoogleStrategy({
   callbackURL: GOOGLE_CLIENT_CALLBACK_URL,
 },
 ((accessToken, refreshToken, profile, cb) => {
-
   models.Users.findOrCreate({
     where: { googleId: profile.id },
     defaults: { username: profile.displayName },
@@ -81,7 +81,6 @@ app.use((req, res, next) => {
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
   } else {
-
     next();
   }
 });
@@ -112,9 +111,8 @@ app.get('/', (req, res) => {
 // add a trip to the database
 // ALSO WORKS FOR SHARING
 app.post('/addTrip', (req, res) => {
-
   const stringifiedWayPoints = JSON.stringify(req.body.waypoints);
-  const milesTraveledNum = Number(req.body.milesTraveled.split(' ')[0].replace(/,/g, ''));
+  const milesTraveledNum = Math.round(Number(req.body.milesTraveled.split(' ')[0].replace(/,/g, '')));
   return models.Trips.findOrCreate({
     where: {
       id: req.body.tripId || 0,
@@ -127,7 +125,6 @@ app.post('/addTrip', (req, res) => {
       milesTraveled: milesTraveledNum,
     },
   }).then((trip) => {
-
     if (trip[1] === false) {
       models.Trips.update(
         {
@@ -180,13 +177,9 @@ app.post('/removeTrip', (req, res) => {
 // gets all users past, current, and previous trips
 
 app.get('/getAllUsersTrips', (req, res) => {
-
   models.Users.findAll({ where: { id: req.query.id } })
-    .then(user =>
-
-      models.UserTrips.findAll({ where: { userId: user[0].id } }))
+    .then(user => models.UserTrips.findAll({ where: { userId: user[0].id } }))
     .then(tripId => Promise.all(tripId.map((trip) => {
-  
       return models.Trips.findAll({ where: { id: trip.tripId } });
     })))
     .then((tripArray) => {
@@ -200,9 +193,7 @@ app.get('/getAllUsersTrips', (req, res) => {
           trip[0].dataValues.status = 'previous';
         }
         trip[0].dataValues.wayPoints = JSON.parse(trip[0].dataValues.wayPoints);
- 
       });
-  
       res.status(200).send(tripArray);
     })
     .catch((err) => {
@@ -232,9 +223,7 @@ app.get('/getStats', (req, res) => {
       { id: trip.tripId },
     }))))
     .then((tripArray) => {
-
       const previousTrips = tripArray.filter(trip => trip[0].dataValues.dateEnd < currently);
-
       previousTrips.forEach((prevTrip) => {
         const citiesArr = prevTrip[0].route.split(' -> ');
         statsObj.milesTraveled += prevTrip[0].milesTraveled;
@@ -243,7 +232,6 @@ app.get('/getStats', (req, res) => {
       statsObj.cities = _.uniq(_.flatten(statsObj.cities));
       statsObj.numberOfCities = statsObj.cities.length;
       statsObj.numberOfTrips = previousTrips.length;
-
     })
     .then(() => models.UserInterests.findAll({ where: { userId: req.query.id } }))
     .then((interests) => {
@@ -278,9 +266,6 @@ app.post('/likedInterest', (req, res) => {
   })
     .then((instance) => {
       instance.increment(field);
-      // const { photoRef } = req.body;
-      //   return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoRef}&key=${GOOGLE_MAPS_API_KEY}`;
-      // }).then((imgUrl) => {
       const city = `${req.body.address.split(', ')[1]} ${req.body.address.split(', ')[2]}`;
       return models.Places.findOrCreate({
         where: {
@@ -316,7 +301,7 @@ app.post('/likedInterest', (req, res) => {
       }
       res.status(200);
     })
-    .then((result) => {
+    .then(() => {
       res.status(200);
     })
     .catch((err) => {
@@ -331,7 +316,7 @@ app.delete('/likedInterest', (req, res) => {
       placeId: req.query.placeId,
     },
   })
-    .then((result) => {
+    .then(() => {
       res.status(202);
     })
     .catch(err => console.error(err));
@@ -384,7 +369,7 @@ app.get('/getPlaceInfo', (req, res) => {
       if (result) placeInfo.status = result.status;
       else placeInfo.status = false;
     })
-    .then(result => getPlaceInfo(req.query.placeId))
+    .then(() => getPlaceInfo(req.query.placeId))
     .then((response) => {
       const {
         // eslint-disable-next-line camelcase
@@ -413,8 +398,6 @@ app.get('/getPlaceInfo', (req, res) => {
       return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoRef}&key=${GOOGLE_MAPS_API_KEY}`;
     })
     .then((imgUrl) => {
-
-      // eslint-disable-next-line no-unused-expressions
       placeInfo.photo = imgUrl;
       res.send(placeInfo);
     })
@@ -438,7 +421,6 @@ app.post('/saveForLater', (req, res) => models.Places.findOrCreate({
 
 //  GET a user's places for Places page
 app.get('/getLikedAndSavedForLater', (req, res) => {
-
   const placesObj = {};
   placesObj.savedPlaces = [];
   placesObj.likedPlaces = [];
@@ -497,7 +479,7 @@ app.get('/nearbyPlaces', (req, res) => {
       } else {
         response.forEach((interestArr) => {
           for (let i = 0; i < interestArr.length; i += 1) {
-            if (i > 2) break;
+            if (i > 4) break;
             filteredRes.push(interestArr[i]);
           }
         });
@@ -510,7 +492,6 @@ app.get('/nearbyPlaces', (req, res) => {
 });
 
 app.get('/nearbyPlacesByCategory', (req, res) => {
-
   Promise.all(getNearbyPlaces(req.query.location, req.query.category))
     .then((result) => {
       const filteredRes = result[0].slice(0, 3);
@@ -528,9 +509,6 @@ app.get('/routePositions', (req, res) => {
             lat: location.json.results[0].geometry.location.lat,
             lng: location.json.results[0].geometry.location.lng,
             placeId: location.json.results[0].place_id || 'no id',
-            // lat: location.value.json.results[0].geometry.location.lat,   ---Promise.allSettled() version
-            // lng: location.value.json.results[0].geometry.location.lng,
-            // placeId: location.value.json.results[0].place_id || 'no id',
           };
         }
         return {
@@ -538,9 +516,6 @@ app.get('/routePositions', (req, res) => {
             lat: location.json.results[0].geometry.location.lat,
             lng: location.json.results[0].geometry.location.lng,
             placeId: location.json.results[0].place_id || 'no id',
-            // lat: location.value.json.results[0].geometry.location.lat,   ---Promise.allSettled() version
-            // lng: location.value.json.results[0].geometry.location.lng,
-            // placeId: location.value.json.results[0].place_id || 'no id',
           },
         };
       });
@@ -604,26 +579,26 @@ app.get('/eta', (req, res) => {
 
 app.get('/routeSuggestions', (req, res) => {
   const { loc1, loc2, category } = req.query;
-  const [ loc1Lat, loc1Lng, loc2Lat, loc2Lng ] = [...loc1.split(','),...loc2.split(',')].map(num => Number(num));
-  
-  getLocationsNearPoints(loc1Lat, loc1Lng, loc2Lat, loc2Lng, req.query.category)
-    .then(result => {
+  const [loc1Lat, loc1Lng, loc2Lat, loc2Lng] = [...loc1.split(','), ...loc2.split(',')].map(num => Number(num));
+  getLocationsNearPoints(loc1Lat, loc1Lng, loc2Lat, loc2Lng, category)
+    .then((result) => {
       res.status(200).send(result);
     })
-    .catch(err => {
-      console.error(err)
-      res.status(500)
-    })
-})
+    .catch((err) => {
+      console.error(err);
+      res.status(500);
+    });
+});
 
 app.get('/routeDirectionsSuggestions', (req, res) => {
-
-  const { loc1, loc2, waypoints, category } = req.query;
+  const {
+    loc1, loc2, waypoints, category,
+  } = req.query;
   findPointsByDirections(loc1, loc2, waypoints, category)
-    .then(suggestions => {
+    .then((suggestions) => {
       const formattedSuggestions = [];
       suggestions.forEach(locations => locations.forEach((location, index) => {
-        switch(index) {
+        switch (index) {
           case 0: location.zoomLevel = 1; break;
           case 1: location.zoomLevel = 6; break;
           case 2: location.zoomLevel = 6; break;
@@ -635,15 +610,15 @@ app.get('/routeDirectionsSuggestions', (req, res) => {
           case 8: location.zoomLevel = 9; break;
           default: location.zoomLevel = 10; break;
         }
-        formattedSuggestions.push(location)
-      }))
-      res.status(200).send(formattedSuggestions)
+        formattedSuggestions.push(location);
+      }));
+      res.status(200).send(formattedSuggestions);
     })
-    .catch(err => {
-      console.error(err)
-      res.status(500)
-    })
-})
+    .catch((err) => {
+      console.error(err);
+      res.status(500);
+    });
+});
 const PORT = 4201;
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
