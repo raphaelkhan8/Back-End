@@ -619,7 +619,7 @@ app.get('/routeDirectionsSuggestions', (req, res) => {
       res.status(500);
     });
 });
-const PORT = 4201;
+const PORT = process.env.PORT || 4201;
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
